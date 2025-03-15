@@ -1,6 +1,8 @@
 import json
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 from openai import OpenAI
 
 from model.searchResponse import SearchResponse
@@ -14,6 +16,13 @@ OAI_client = OpenAI()
 pinecone_client = PineconeClient()
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/")
