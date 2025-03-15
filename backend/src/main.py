@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from openai import OpenAI
 
+from model.searchQuery import SearchQuery
 from model.searchResponse import SearchResponse
 from model.pineconeQueryResponse import PineconeQueryResponse, SearchResult
 
@@ -25,15 +26,10 @@ app.add_middleware(
 )
 
 
-@app.get("/")
-def root():
-    return {"message": "Hello world"}
-
-
-@app.get("/search")
-def search(q: str) -> SearchResponse:
-    embedding = fetch_embeddings(q)
-    search_results = query_index(embedding)
+@app.post("/search")
+def search(query: SearchQuery) -> SearchResponse:
+    embedding = fetch_embeddings(query.query)
+    search_results = query_index(embedding, query.filters)
     return SearchResponse(results=search_results)
 
 
@@ -44,8 +40,8 @@ def fetch_embeddings(search_query: str):
     return response.data[0].embedding
 
 
-def query_index(query_embedding) -> list[SearchResult]:
-    result = pinecone_client.query_search(query_embedding).to_dict()
+def query_index(query_embedding, filters) -> list[SearchResult]:
+    result = pinecone_client.query_search(query_embedding, filters).to_dict()
     matches = [SearchResult(**sr) for sr in result["matches"]]
 
     return matches

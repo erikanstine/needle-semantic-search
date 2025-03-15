@@ -31,8 +31,24 @@ class PineconeClient:
         )
         return index
 
-    def query_search(self, query_embedding):
+    def query_search(self, query_embedding, filters):
+        def build_filter(filters):
+            f = {}
+            if not filters:
+                return f
+            if filters.company:
+                f["company"] = filters.company
+            if filters.quarter:
+                quarter, year = filters.quarter.split(" ")
+                f["quarter"] = quarter.lstrip("Q")
+                f["year"] = year
+            return f
+
         result = self.index.query(
-            vector=query_embedding, top_k=5, include_metadata=True, include_values=False
+            vector=query_embedding,
+            top_k=5,
+            include_metadata=True,
+            include_values=False,
+            filter=build_filter(filters),
         )
         return result
