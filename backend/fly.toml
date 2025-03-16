@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for backend-late-haze-3684 on 2025-03-16T15:56:25-04:00
+# fly.toml app configuration file generated for needle-api on 2025-03-16T16:53:40-04:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'backend-late-haze-3684'
+app = 'needle-api'
 primary_region = 'iad'
 
 [build]
