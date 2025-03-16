@@ -10,7 +10,8 @@ function App() {
 
   const handleSearch = async (e) => {
     e.preventDefault()
-    const response = await axios.post(`http://localhost:8000/search`, {
+    const response = await axios.post(`https://needle-api.fly.dev/search`, {
+    // const response = await axios.post(`http://localhost:8000/search`, {
       query: query,
       filters: {
         ...(company && { company }),
