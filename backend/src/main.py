@@ -1,15 +1,13 @@
-import json
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from openai import OpenAI
 
-from model.searchQuery import SearchQuery
-from model.searchResponse import SearchResponse
-from model.pineconeQueryResponse import PineconeQueryResponse, SearchResult
+from .model.searchQuery import SearchQuery
+from .model.searchResponse import SearchResponse
+from .model.pineconeQueryResponse import SearchResult
 
-from client.pineconeClient import PineconeClient
+from .client.pineconeClient import PineconeClient
 from dotenv import load_dotenv
 
 load_dotenv()
