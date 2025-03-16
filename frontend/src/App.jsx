@@ -46,6 +46,22 @@ function App() {
           <option value="Q3 2024">Q3 2024</option>
           <option value="Q2 2024">Q2 2024</option>
           <option value="Q1 2024">Q1 2024</option>
+          <option value="Q4 2023">Q4 2023</option>
+          <option value="Q3 2023">Q3 2023</option>
+          <option value="Q2 2023">Q2 2023</option>
+          <option value="Q1 2023">Q1 2023</option>
+          <option value="Q4 2022">Q4 2022</option>
+          <option value="Q3 2022">Q3 2022</option>
+          <option value="Q2 2022">Q2 2022</option>
+          <option value="Q1 2022">Q1 2022</option>
+          <option value="Q4 2021">Q4 2021</option>
+          <option value="Q3 2021">Q3 2021</option>
+          <option value="Q2 2021">Q2 2021</option>
+          <option value="Q1 2021">Q1 2021</option>
+          <option value="Q4 2020">Q4 2020</option>
+          <option value="Q3 2020">Q3 2020</option>
+          <option value="Q2 2020">Q2 2020</option>
+          <option value="Q1 2020">Q1 2020</option>
         </select>
         <button type="submit" className="mt-2 bg-blue-500 text-white rounded px-4 py-2">
           Search
