@@ -28,17 +28,17 @@ A semantic search engine designed specifically for earnings call transcripts.
 ## Running Needle Locally
 ### Local setup
 1. API keys
-  1. Sign up for OpenAI, get API key.
-  2. Sign up for Pinecone, get API key, index URL.
+    1. Sign up for OpenAI, get API key.
+    2. Sign up for Pinecone, get API key, index URL.
 2. Clone repo
 3. Add API keys to `/backend/.env`
-  1. `OPENAI_API_KEY`
-  2. `PINECONE_DEFAULT_API_KEY`
-  3. `PINECONE_HOST_URL`
+    1. `OPENAI_API_KEY`
+    2. `PINECONE_DEFAULT_API_KEY`
+    3. `PINECONE_HOST_URL`
 4. Add symlink to `/notebooks/.env`: (from `/notebooks/`) 
     ```ln -s {{absolute path to /backend/.env}} .env```
 5. Create virtual environments, install requirements
-  1. (In `/notebooks/` and `/backend`) 
+    1. (In `/notebooks/` and `/backend`) 
     ```
     virtualenv .venv
     source .venv/bin/activate
@@ -49,9 +49,9 @@ A semantic search engine designed specifically for earnings call transcripts.
 1. Run jupyter notebook sequentially, familiarize yourself with the various steps, functions. Run ad hoc, as needed.
 #### App
 1. Spin up local server (From `/backend`, within virtualenv) 
-  1. Either... FastAPI dev
+    1. Either... FastAPI dev
   ```fastapi dev src/main.py```
-  2. Or spin up via docker
+    2. Or spin up via docker
   ```
   docker build -t needle-backend .
   docker run \
@@ -60,10 +60,10 @@ A semantic search engine designed specifically for earnings call transcripts.
   -e PINECONE_DEFAULT_API_KEY={{YOUR KEY HERE}} \
   -e PINECONE_HOST_URL={{YOUR INDEX URL HERE}} \
   needle-backend
-  ```
+  ```   
 2. Spin up front end (from `/frontend`)
-  1. `npm install`
-  2. Create `.env` file with
-  ```VITE_BACKEND_URL=http://localhost:8000```
-  3. `npm run dev`
-  4. Frontend will be running at `http://localhost:5173`
+    1. `npm install`
+    2. Create `.env` file with
+    ```VITE_BACKEND_URL=http://localhost:8000```
+    3. `npm run dev`
+    4. Frontend will be running at `http://localhost:5173`
