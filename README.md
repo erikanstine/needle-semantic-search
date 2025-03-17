@@ -1,5 +1,6 @@
 # needle-semantic-search
-A semantic search engine designed specifically for financial and regulatory documents
+##[Needle](https://needle-semantic-search.vercel.app/)
+A semantic search engine designed specifically for financial and regulatory documents.
 
 ## Architecture
 ### Data ingestion pipeline
