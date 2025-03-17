@@ -40,26 +40,28 @@ A semantic search engine designed specifically for earnings call transcripts.
 5. Create virtual environments, install requirements
     1. (In `/notebooks/` and `/backend`) 
     ```
-    virtualenv .venv
-    source .venv/bin/activate
-    pip install -r requirements.txt
+        virtualenv .venv
+        source .venv/bin/activate
+        pip install -r requirements.txt
     ```
 ### Running
 #### Data Ingestion
 1. Run jupyter notebook sequentially, familiarize yourself with the various steps, functions. Run ad hoc, as needed.
+    1. Run from within virtualenv (`source .venv/bin/activate`)
+    2. `jupyter notebook`
 #### App
 1. Spin up local server (From `/backend`, within virtualenv) 
     1. Either... FastAPI dev
   ```fastapi dev src/main.py```
     2. Or spin up via docker
   ```
-  docker build -t needle-backend .
-  docker run \
-  -p 8000:8000 \
-  -e OPENAI_API_KEY={{YOUR KEY HERE}} \
-  -e PINECONE_DEFAULT_API_KEY={{YOUR KEY HERE}} \
-  -e PINECONE_HOST_URL={{YOUR INDEX URL HERE}} \
-  needle-backend
+    docker build -t needle-backend .
+    docker run \
+    -p 8000:8000 \
+    -e OPENAI_API_KEY={{YOUR KEY HERE}} \
+    -e PINECONE_DEFAULT_API_KEY={{YOUR KEY HERE}} \
+    -e PINECONE_HOST_URL={{YOUR INDEX URL HERE}} \
+    needle-backend
   ```   
 2. Spin up front end (from `/frontend`)
     1. `npm install`
