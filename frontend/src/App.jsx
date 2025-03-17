@@ -21,6 +21,11 @@ function App() {
           ...(company && { company }),
           ...(quarter && { quarter }),
         }
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        withCredentials: false,
       })
       setResults(response.data.results)
     } catch (err) {
