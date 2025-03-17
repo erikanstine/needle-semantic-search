@@ -1,5 +1,5 @@
 # needle-semantic-search
-## [Needle](https://needle-semantic-search.vercel.app/)
+## [Needle 🪡](https://needle-semantic-search.vercel.app/)
 A semantic search engine designed specifically for financial and regulatory documents.
 
 ## Architecture
