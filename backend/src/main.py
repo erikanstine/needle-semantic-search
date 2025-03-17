@@ -17,7 +17,7 @@ pinecone_client = PineconeClient()
 app = FastAPI()
 
 origins = [
-    "https://needle-semantic-search.vercel.app/",
+    "https://needle-semantic-search.vercel.app",
     "http://localhost:5173",
 ]
 
