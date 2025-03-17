@@ -3,10 +3,10 @@ import os
 from pinecone import Pinecone, ServerlessSpec
 from dotenv import load_dotenv
 
-HOST_URL = "https://needle-earnings-transcripts-e38g0na.svc.aped-4627-b74a.pinecone.io"
-INDEX_NAME = "needle-earnings-transcripts"
-
 load_dotenv()
+
+HOST_URL = os.getenv("PINECONE_HOST_URL")
+INDEX_NAME = "needle-earnings-transcripts"
 
 
 class PineconeClient:
@@ -26,9 +26,7 @@ class PineconeClient:
                 deletion_protection="disabled",
                 tags={"environment": "development"},
             )
-        index = pc.Index(
-            host="https://needle-earnings-transcripts-e38g0na.svc.aped-4627-b74a.pinecone.io"
-        )
+        index = pc.Index(host=HOST_URL)
         return index
 
     def query_search(self, query_embedding, filters):
