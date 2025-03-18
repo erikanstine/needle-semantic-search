@@ -8,11 +8,24 @@ from .model.searchResponse import SearchResponse
 from .model.pineconeQueryResponse import SearchResult
 
 from .client.pineconeClient import PineconeClient
+from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
 load_dotenv()
-OAI_client = OpenAI()
-pinecone_client = PineconeClient()
+OAI_client = None
+pinecone_client = None
+
+
+@asynccontextmanager
+async def lifesppan(app: FastAPI):
+    # Startup
+    pinecone_client = PineconeClient()
+    OAI_client = OpenAI()
+    print("startup")
+
+    yield
+    # Shutdown
+
 
 app = FastAPI()
 
