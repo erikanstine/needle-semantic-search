@@ -1,7 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from openai import OpenAI
+
+from .logger import get_logger
+from .services.openai_service import fetch_embeddings
+from .services.pinecone_service import query_index
 
 from .model.searchQuery import SearchQuery
 from .model.searchResponse import SearchResponse
@@ -11,23 +15,27 @@ from .client.pineconeClient import PineconeClient
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
+logger = get_logger("needle-backend")
 load_dotenv()
 OAI_client = None
 pinecone_client = None
 
 
 @asynccontextmanager
-async def lifesppan(app: FastAPI):
+async def lifespan(app: FastAPI):
     # Startup
-    pinecone_client = PineconeClient()
-    OAI_client = OpenAI()
-    print("startup")
+    app.state.pinecone_client = PineconeClient()
+    logger.info(
+        "Pinecone client initialized", extra={"client": app.state.pinecone_client}
+    )
+    app.state.oai_client = OpenAI()
+    logger.info("OpenAI client initialized", extra={"client": app.state.oai_client})
 
     yield
     # Shutdown
 
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 origins = [
     "https://needle-semantic-search.vercel.app",
@@ -44,22 +52,35 @@ app.add_middleware(
 )
 
 
-@app.post("/search")
-def search(query: SearchQuery) -> SearchResponse:
-    embedding = fetch_embeddings(query.query)
-    search_results = query_index(embedding, query.filters)
-    return SearchResponse(results=search_results)
-
-
-def fetch_embeddings(search_query: str):
-    response = OAI_client.embeddings.create(
-        input=search_query, model="text-embedding-3-small"
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger.info(
+        "Request started", extra={"method": request.method, "url": str(request.url)}
     )
-    return response.data[0].embedding
+    response = await call_next(request)
+    logger.info(
+        "Request completed",
+        extra={
+            "method": request.method,
+            "url": str(request.url),
+            "status_code": response.status_code,
+        },
+    )
+    return response
 
 
-def query_index(query_embedding, filters) -> list[SearchResult]:
-    result = pinecone_client.query_search(query_embedding, filters).to_dict()
-    matches = [SearchResult(**sr) for sr in result["matches"]]
+@app.post("/search")
+def search(request: Request, query: SearchQuery) -> SearchResponse:
+    logger.info("Semantic search query received", extra={"query": query})
+    openai_client = request.app.state.oai_client
+    pinecone_client = request.app.state.pinecone_client
 
-    return matches
+    assert pinecone_client is not None, "Pinecone client not initialized"
+    assert openai_client is not None, "OpenAI client not initialized"
+
+    embedding = fetch_embeddings(openai_client, query.query)
+    search_results = query_index(pinecone_client, embedding, query.filters)
+    logger.info(
+        "Returning semantic search results", extra={"result_count": len(search_results)}
+    )
+    return SearchResponse(results=search_results)
