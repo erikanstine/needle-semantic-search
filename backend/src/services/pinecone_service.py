@@ -12,6 +12,7 @@ def group_results(results: list[PineconeSearchResult]) -> list[SearchResult]:
             groups[document] = SearchResult(
                 company=r.metadata.company,
                 quarter=str(r.metadata.quarter),
+                year=str(r.metadata.year),
                 url=r.metadata.url,
                 document=r.metadata.document,
                 snippets=[],
