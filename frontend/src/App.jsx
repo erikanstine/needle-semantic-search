@@ -118,17 +118,19 @@ function App() {
           <div key={idx} className='border rounded-xl bg-white shadow-md p-6 my-4 hover:shadow-lg transition-shadow'>
             <div className='flex justify-between items-center'>
               <div className='text-xl font-semibold text-gray-800'>
-                {result.metadata.company} <span className='text-gray-500'>Q{result.metadata.quarter} {result.metadata.year}</span>
+                {result.company} <span className='text-gray-500'>Q{result.quarter} {result.year}</span>
               </div>
               <a
-                href={result.metadata.url}
+                href={result.url}
                 target="_blank"
                 className='text-indigo-500 hover:text-indigo-600 underline text-sm'
               >
                 View Transcript →        
               </a>
             </div>
-            <p className='text-gray-700 mt-3'>{result.metadata.snippet}</p>
+            {result.snippets.map((snippet, sidx) => (
+              <p key={sidx} className='text-gray-700 mt-3'>{snippet}</p>
+            ))}
           </div>
         ))}
       </div>

@@ -12,12 +12,12 @@ class ChunkMetadata(BaseModel):
     url: str
 
 
-class SearchResult(BaseModel):
+class PineconeSearchResult(BaseModel):
     id: str
     metadata: ChunkMetadata
     score: float
 
 
 class PineconeQueryResponse(BaseModel):
-    matches: list[SearchResult]
+    matches: list[PineconeSearchResult]
     namespace: str

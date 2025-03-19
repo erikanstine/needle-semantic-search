@@ -3,6 +3,8 @@ import os
 from pinecone import Pinecone, ServerlessSpec
 from dotenv import load_dotenv
 
+from ..model.pineconeQueryResponse import PineconeSearchResult
+
 load_dotenv()
 
 HOST_URL = os.getenv("PINECONE_HOST_URL")
@@ -13,7 +15,7 @@ class PineconeClient:
     def __init__(self):
         self.index = self.init_index()
 
-    def init_index(self, index_name=INDEX_NAME):
+    def init_index(self, index_name: str = INDEX_NAME) -> Pinecone:
         pc = Pinecone(api_key=os.getenv("PINECONE_DEFAULT_API_KEY"))
         if not pc.has_index(index_name):
             print("Index not found, creating new")
@@ -29,7 +31,7 @@ class PineconeClient:
         index = pc.Index(host=HOST_URL)
         return index
 
-    def query_search(self, query_embedding, filters):
+    def query_search(self, query_embedding, filters) -> list[PineconeSearchResult]:
         def build_filter(filters):
             f = {}
             if not filters:
@@ -44,7 +46,7 @@ class PineconeClient:
 
         result = self.index.query(
             vector=query_embedding,
-            top_k=5,
+            top_k=10,
             include_metadata=True,
             include_values=False,
             filter=build_filter(filters),

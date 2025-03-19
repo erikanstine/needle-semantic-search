@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import HTTPException, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from openai import OpenAI
@@ -8,8 +8,7 @@ from .services.openai_service import fetch_embeddings
 from .services.pinecone_service import query_index
 
 from .model.searchQuery import SearchQuery
-from .model.searchResponse import SearchResponse
-from .model.pineconeQueryResponse import SearchResult
+from .model.searchResponse import SearchResponse, SearchResult
 
 from .client.pineconeClient import PineconeClient
 from contextlib import asynccontextmanager
@@ -72,6 +71,8 @@ async def log_requests(request: Request, call_next):
 @app.post("/search")
 def search(request: Request, query: SearchQuery) -> SearchResponse:
     logger.info("Semantic search query received", extra={"query": query})
+    if not query.query:
+        raise HTTPException(status_code=422, detail="Invalid query")
     openai_client = request.app.state.oai_client
     pinecone_client = request.app.state.pinecone_client
 
