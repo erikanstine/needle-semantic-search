@@ -1,6 +1,12 @@
 from pydantic import BaseModel
 
-from .pineconeQueryResponse import SearchResult
+
+class SearchResult(BaseModel):
+    company: str
+    quarter: str
+    url: str
+    document: str
+    snippets: list[str]
 
 
 class SearchResponse(BaseModel):
