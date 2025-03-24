@@ -14,6 +14,7 @@ function App() {
     e.preventDefault()
     setLoading(true)
     setError(null)
+    setResults([])
     try {
       const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/search`, {
         query: query,
@@ -27,7 +28,12 @@ function App() {
         },
         withCredentials: false,
       })
-      setResults(response.data.results)
+      if (response.data === "") {
+        setError('No results found. Please try another query.')
+        setResults([])
+      } else {
+        setResults(response.data.results)
+      }
     } catch (err) {
       console.error("Search error:", err)
       setError('Unable to retrieve search results. Please try again later.')
@@ -100,7 +106,7 @@ function App() {
       </form>
 
       {/* No results */}
-      {!results.length && !loading && (
+      {!error && !results.length && !loading && (
         <div className="text-center text-gray-500 my-8">
           No results yet. Try a query to get insights.
         </div>
@@ -113,24 +119,36 @@ function App() {
       {error && <div className='mt-4 text-red-500'>An error occurred: {error}</div>}
 
       {/* Results Cards */}
-      <div className='mt-4 grid gap-4'>
+      <div className='mt-4 grid gap-6'>
         {results.map((result, idx) => (
-          <div key={idx} className='border rounded-xl bg-white shadow-md p-6 my-4 hover:shadow-lg transition-shadow'>
-            <div className='flex justify-between items-center'>
-              <div className='text-xl font-semibold text-gray-800'>
-                {result.company} <span className='text-gray-500'>Q{result.quarter} {result.year}</span>
-              </div>
+          <div 
+            key={idx} 
+            className='border border-grey-200 rounded-2xl bg-white shadow-sm p-6 hover:shadow-lg transition-shadow'
+          >
+            <div className='flex justify-between items-center mb-3'>
+              <h2 className='text-xl font-semibold text-gray-800'>
+                {result.company}{' '}
+                <span className='font-medium text-gray-400'>
+                  Q{result.quarter} {result.year}
+                </span>
+              </h2>
               <a
                 href={result.url}
                 target="_blank"
-                className='text-indigo-500 hover:text-indigo-600 underline text-sm'
+                rel='noopener noreferrer'
+                className='text-sm font-medium text-indigo-600'
               >
                 View Transcript →        
               </a>
             </div>
-            {result.snippets.map((snippet, sidx) => (
-              <p key={sidx} className='text-gray-700 mt-3'>{snippet}</p>
-            ))}
+            <ul className='space-y-2 pl-4 text-left'>
+              {result.summary.map((summary, idx) => (
+                <li key={idx} className='flex items-start leading-snug'>
+                  <span className='mt-2 mr-2 h-2 w-2 bg-indigo-500 rounded-full flex-shrink-0'></span>
+                  <span className='text-gray-700 text-base'>{summary}</span>
+                </li>
+              ))}
+          </ul>
           </div>
         ))}
       </div>
