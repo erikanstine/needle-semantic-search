@@ -1,10 +1,10 @@
-from fastapi import HTTPException, FastAPI, Request
+from fastapi import HTTPException, FastAPI, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 
 from openai import OpenAI
 
 from .logger import get_logger
-from .services.openai_service import fetch_embeddings
+from .services.openai_service import fetch_embeddings, summarize_snippets_with_llm
 from .services.pinecone_service import query_index
 
 from .model.searchQuery import SearchQuery
@@ -23,7 +23,7 @@ pinecone_client = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    app.state.pinecone_client = PineconeClient()
+    app.state.pinecone_client = PineconeClient(logger)
     logger.info(
         "Pinecone client initialized", extra={"client": app.state.pinecone_client}
     )
@@ -69,7 +69,7 @@ async def log_requests(request: Request, call_next):
 
 
 @app.post("/search")
-def search(request: Request, query: SearchQuery) -> SearchResponse:
+def search(request: Request, response: Response, query: SearchQuery) -> SearchResponse:
     logger.info("Semantic search query received", extra={"query": query})
     if not query.query:
         raise HTTPException(status_code=422, detail="Invalid query")
@@ -79,8 +79,21 @@ def search(request: Request, query: SearchQuery) -> SearchResponse:
     assert pinecone_client is not None, "Pinecone client not initialized"
     assert openai_client is not None, "OpenAI client not initialized"
 
-    embedding = fetch_embeddings(openai_client, query.query)
-    search_results = query_index(pinecone_client, embedding, query.filters)
+    embedding = fetch_embeddings(openai_client, query.query, logger)
+    grouped_search_results = query_index(
+        pinecone_client, logger, embedding, query.filters
+    )
+    if not grouped_search_results:
+        logger.debug("No grouped results.")
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return SearchResponse(results=[])
+    search_results = []
+    for result in grouped_search_results:
+        r = summarize_snippets_with_llm(openai_client, logger, query.query, result)
+        if not r:
+            continue
+        search_results.append(r)
+
     logger.info(
         "Returning semantic search results", extra={"result_count": len(search_results)}
     )

@@ -1,7 +1,8 @@
 import os
 
-from pinecone import Pinecone, ServerlessSpec
 from dotenv import load_dotenv
+from logging import Logger
+from pinecone import Pinecone, ServerlessSpec
 
 from ..model.pineconeQueryResponse import PineconeSearchResult
 
@@ -12,13 +13,14 @@ INDEX_NAME = "needle-earnings-transcripts"
 
 
 class PineconeClient:
-    def __init__(self):
+    def __init__(self, logger: Logger):
         self.index = self.init_index()
+        self.logger = logger
 
     def init_index(self, index_name: str = INDEX_NAME) -> Pinecone:
         pc = Pinecone(api_key=os.getenv("PINECONE_DEFAULT_API_KEY"))
         if not pc.has_index(index_name):
-            print("Index not found, creating new")
+            self.logger.info("Pinecone index not found, creating new")
             pc.create_index(
                 name=index_name,
                 vector_type="dense",
@@ -46,9 +48,12 @@ class PineconeClient:
 
         result = self.index.query(
             vector=query_embedding,
-            top_k=10,
+            top_k=15,
             include_metadata=True,
             include_values=False,
             filter=build_filter(filters),
+        )
+        self.logger.info(
+            "Pinecone query returned", extra={"result_count": len(result.matches)}
         )
         return result

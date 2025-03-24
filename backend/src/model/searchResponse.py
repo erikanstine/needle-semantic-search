@@ -10,5 +10,13 @@ class SearchResult(BaseModel):
     snippets: list[str]
 
 
+class SummarizedSearchResult(BaseModel):
+    company: str
+    quarter: str
+    year: str
+    url: str
+    summary: list[str]
+
+
 class SearchResponse(BaseModel):
-    results: list[SearchResult]
+    results: list[SummarizedSearchResult]
