@@ -1,3 +1,5 @@
+import time
+
 from fastapi import HTTPException, FastAPI, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -70,6 +72,7 @@ async def log_requests(request: Request, call_next):
 
 @app.post("/search")
 def search(request: Request, response: Response, query: SearchQuery) -> SearchResponse:
+    start = time.perf_counter()
     logger.info("Semantic search query received", extra={"query": query})
     if not query.query:
         raise HTTPException(status_code=422, detail="Invalid query")
@@ -94,7 +97,9 @@ def search(request: Request, response: Response, query: SearchQuery) -> SearchRe
             continue
         search_results.append(r)
 
+    request_time = time.perf_counter() - start
     logger.info(
-        "Returning semantic search results", extra={"result_count": len(search_results)}
+        "Returning semantic search results",
+        extra={"result_count": len(search_results), "request_time": request_time},
     )
     return SearchResponse(results=search_results)
