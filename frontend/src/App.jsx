@@ -121,8 +121,8 @@ function App() {
       {/* Results Cards */}
       <div className='mt-4 grid gap-6'>
         {results.map((result, idx) => (
-          <div 
-            key={idx} 
+          <div
+            key={idx}
             className='border border-grey-200 rounded-2xl bg-white shadow-sm p-6 hover:shadow-lg transition-shadow'
           >
             <div className='flex justify-between items-center mb-3'>
