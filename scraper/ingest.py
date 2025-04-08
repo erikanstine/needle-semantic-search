@@ -53,13 +53,11 @@ def ingest_chunks(chunks: List[TranscriptChunk]):
             "section": chunk.section,
             "company": chunk.company,
             "quarter": chunk.quarter,
-            "primary_speakers": [speaker.dict() for speaker in chunk.primary_speakers],
-            "participants": [speaker.dict() for speaker in chunk.participants],
-            **{
+            **{  # AI madness
                 f"primary_{k}": v
                 for k, v in flatten_speakers(chunk.primary_speakers).items()
             },
-            **{
+            **{  # AI madness
                 f"participant_{k}": v
                 for k, v in flatten_speakers(chunk.participants).items()
             },
