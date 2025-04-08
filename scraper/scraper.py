@@ -8,6 +8,12 @@ from pydantic import BaseModel
 from typing import List, Optional, Tuple
 
 
+class PageFormatNotImplementedException(BaseException):
+    "Raised when we have not implemented a page format"
+
+    pass
+
+
 class Speaker(BaseModel):
     name: str
     type: str  # "executive" | "analyst" | "operator" | "other"
@@ -69,6 +75,8 @@ def parse_speaker(t: Tag) -> Speaker:
         role = "Investor Relations"
         _type = "investor relations"
     else:
+        if "chief" in inner_text:
+            print("NEW SPEAKER TITLE:", inner_text)
         _type = "other"
     return Speaker(name=name, type=_type, role=role if role else None)
 
@@ -104,7 +112,11 @@ def chunk_id(company, quarter, section, n: str) -> str:
     return f"{company.lower()}-{q}-{y}-{section}-{n}"
 
 
-def iterate_elements(soup: BeautifulSoup) -> list[TranscriptChunk]:
+def iterate_elements(url: str) -> list[TranscriptChunk]:
+    resp = requests.get(url)
+    soup = BeautifulSoup(resp.text, "html.parser")
+    soup = clean_ads(soup)
+
     company, quarter = parse_metadata(soup)
     article_body = soup.find("div", class_="article-body")
     participant_map = parse_participants(article_body)
@@ -119,6 +131,12 @@ def iterate_elements(soup: BeautifulSoup) -> list[TranscriptChunk]:
     Start no 'current step'
     Switch on h2: None -> Prepared remarks -> Q&A, different behavior
     """
+    if not any(
+        article_body.find("h2", string="Questions & Answers:")
+        or article_body.find("h2", string="Questions and Answers:")
+    ):
+        raise PageFormatNotImplementedException
+
     for ele in elements:
         match call_stages[current_step]:
             case "prepared_remarks":
@@ -146,9 +164,9 @@ def iterate_elements(soup: BeautifulSoup) -> list[TranscriptChunk]:
                         )
                         chunk_count += 1
                         current_text = ""
+                        current_speakers = []
 
                     current_step += 1
-                    chunk_count = 0
                     continue
                 if ele.name == "p":
                     if ele.find("strong"):
@@ -175,6 +193,7 @@ def iterate_elements(soup: BeautifulSoup) -> list[TranscriptChunk]:
                             )
                             chunk_count += 1
                             current_text = ""
+                            current_speakers = []
 
                         # Get new speaker
                         current_speaker = parse_speaker(ele)
@@ -189,15 +208,75 @@ def iterate_elements(soup: BeautifulSoup) -> list[TranscriptChunk]:
                         continue
 
                     current_text = current_text + " " + ele.text
-
             case "qa":
                 if ele.name == "h2":
                     if "call participants" in ele.text.lower():
+                        if current_speakers:
+                            chunks.append(
+                                TranscriptChunk(
+                                    chunk_id=chunk_id(
+                                        company,
+                                        quarter,
+                                        call_stages[current_step],
+                                        chunk_count,
+                                    ),
+                                    section=call_stages[current_step],
+                                    company=company,
+                                    quarter=quarter,
+                                    primary_speakers=parse_speakers(
+                                        current_speakers, call_stages[current_step]
+                                    ),
+                                    participants=current_speakers,
+                                    text=current_text,
+                                )
+                            )
                         break
+                    print("Unexpected <h2>:", ele.text)
                 """
                 Split into full Q/A exchanges, add participants as they happen
                 """
-                continue
+                if ele.name == "p":
+                    if ele.find("strong"):
+                        current_speaker = parse_speaker(ele)
+                        if "Duration:" in current_speaker.name:
+                            current_speaker = None
+                            continue
+                        if current_speaker.type in ["operator", "investor relations"]:
+                            # If operator AND current_speakers, save off chunk
+                            if current_speakers:
+                                chunks.append(
+                                    TranscriptChunk(
+                                        chunk_id=chunk_id(
+                                            company,
+                                            quarter,
+                                            call_stages[current_step],
+                                            chunk_count,
+                                        ),
+                                        section=call_stages[current_step],
+                                        company=company,
+                                        quarter=quarter,
+                                        primary_speakers=parse_speakers(
+                                            current_speakers, call_stages[current_step]
+                                        ),
+                                        participants=current_speakers,
+                                        text=current_text,
+                                    )
+                                )
+
+                            current_speaker = None
+                            current_speakers = []
+                            chunk_count += 1
+                            current_text = ""
+                        else:
+                            if current_speaker.name not in [
+                                cs.name for cs in current_speakers
+                            ]:
+                                current_speakers.append(current_speaker)
+                            continue
+
+                    if not current_speakers:
+                        continue
+                    current_text = current_text + " " + ele.text
 
     tokens_so_far = 0
     for c in chunks:
@@ -214,8 +293,10 @@ if __name__ == "__main__":
     # url = "https://www.fool.com/earnings/call-transcripts/2024/11/20/nvidia-nvda-q3-2025-earnings-call-transcript/"
     url = "https://www.fool.com/earnings/call-transcripts/2019/10/30/apple-inc-aapl-q4-2019-earnings-call-transcript.aspx"
     # url = "https://www.fool.com/earnings/call-transcripts/2023/01/26/tesla-tsla-q4-2022-earnings-call-transcript/"
-    resp = requests.get(url)
-    soup = BeautifulSoup(resp.text, "html.parser")
-    soup = clean_ads(soup)
-    chunks = iterate_elements(soup)
+    chunks = iterate_elements(url)
+    # for chunk in chunks:
+    #     print("Chunk:", chunk.chunk_id)
+    #     print("Primary Speakers:", chunk.primary_speakers)
+    #     print("Participants:", chunk.participants)
+    #     print(chunk.text[:500], "\n")
     print(chunks)
