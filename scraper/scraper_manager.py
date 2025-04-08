@@ -1,5 +1,6 @@
-from scraper import iterate_elements, PageFormatNotImplementedException
 from ingest import ingest_chunks
+from model import PageFormatNotImplementedException
+from scraper import Scraper
 
 
 if __name__ == "__main__":
@@ -15,7 +16,8 @@ if __name__ == "__main__":
             continue
         seen_urls.add(u)
         try:
-            chunks = iterate_elements(u)
+            scraper = Scraper(u)
+            chunks = scraper.scrape()
             print(f"URL: {u}, \nChunks: {len(chunks)}\n")
             ingest_chunks(chunks)
 

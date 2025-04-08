@@ -4,33 +4,8 @@ import tiktoken
 
 from bs4 import BeautifulSoup
 from bs4.element import Tag
-from pydantic import BaseModel
-from typing import List, Optional, Tuple
-
-
-class PageFormatNotImplementedException(BaseException):
-    "Raised when we have not implemented a page format"
-
-    pass
-
-
-class Speaker(BaseModel):
-    name: str
-    type: str  # "executive" | "analyst" | "operator" | "other"
-    role: Optional[str] = None  # "CEO", "CFO", etc.
-
-
-class TranscriptChunk(BaseModel):
-    chunk_id: str
-    section: str  # "prepared_remarks" | "qa"
-    company: str
-    quarter: str
-    text: str
-    snippet: Optional[str] = None
-    primary_speakers: List[Speaker]
-    participants: List[Speaker]
-    start_token: Optional[int] = None
-    end_token: Optional[int] = None
+from typing import List, Tuple
+from model import Speaker, TranscriptChunk, PageFormatNotImplementedException
 
 
 def tokenize(text: str) -> List[int]:
@@ -254,7 +229,7 @@ class Scraper:
                             continue
                         current_text = current_text + " " + ele.text
 
-    def ingest(self) -> List[TranscriptChunk]:
+    def scrape(self) -> List[TranscriptChunk]:
         self.iterate_elements()
         self.add_token_counts()
         return self.chunks
@@ -267,7 +242,7 @@ if __name__ == "__main__":
 
     scraper = Scraper(url)
 
-    chunks = scraper.ingest()
+    chunks = scraper.scrape()
     for chunk in chunks:
         print("Chunk:", chunk.chunk_id)
         print("Primary Speakers:", chunk.primary_speakers)

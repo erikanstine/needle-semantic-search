@@ -5,7 +5,7 @@ from pinecone import Pinecone, ServerlessSpec
 from dotenv import load_dotenv
 from typing import List
 
-from scraper import TranscriptChunk
+from model import TranscriptChunk
 
 
 load_dotenv()
