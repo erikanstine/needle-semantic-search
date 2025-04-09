@@ -10,5 +10,17 @@
     "quarter": "Q4 2019",
     "call_ts": "2024-11-20T00:00:00Z",
     "processed": true
+  },
+  "https://www.fool.com/earnings/call-transcripts/2024/07/23/visa-v-q3-2024-earnings-call-transcript/": {
+    "company": "V",
+    "quarter": "Q3 2024",
+    "call_ts": "2024-07-23T17:00:00Z",
+    "processed": true
+  },
+  "https://www.fool.com/earnings/call-transcripts/2022/01/28/visa-v-q1-2022-earnings-call-transcript/": {
+    "company": "V",
+    "quarter": "Q1 2022",
+    "call_ts": "2022-01-27T17:00:00Z",
+    "processed": true
   }
 }
