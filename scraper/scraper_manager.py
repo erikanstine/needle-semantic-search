@@ -1,7 +1,12 @@
 from ingest import ingest_chunks
 from model import PageFormatNotImplementedException
 from scraper import Scraper
-from storage import load_scraped_urls, update_url_cache, write_url_error_result
+from storage import (
+    clear_urls_to_scrape,
+    load_scraped_urls,
+    update_url_cache,
+    write_url_error_result,
+)
 
 from typing import List, Optional, Tuple
 
@@ -21,10 +26,12 @@ def run_scraper_manager(
             chunks = scraper.scrape()
             url_metadata = ingest_chunks(chunks)
             ingested_urls[url] = url_metadata
-        except PageFormatNotImplementedException as e:
-            write_url_error_result(url, str(e))
+        except Exception as e:
+            write_url_error_result(url, f"{e}")
 
-    update_url_cache(ingested_urls)
+    if ingested_urls:
+        update_url_cache(ingested_urls)
+        clear_urls_to_scrape()
 
 
 if __name__ == "__main__":

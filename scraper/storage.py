@@ -47,3 +47,17 @@ def update_url_cache(urls: Dict[str, Dict[str, Any]]):
 
     with open(fn, "w+") as f:
         json.dump(data, f, indent=2)
+
+
+def store_crawled_urls(urls: List[str]):
+    fn = os.getenv("JSON_URLS_TO_SCRAPE")
+    Path(fn).parent.mkdir(parents=True, exist_ok=True)
+    with open(fn, "w") as f:
+        json.dump(urls, f, indent=2)
+
+
+def clear_urls_to_scrape():
+    fn = os.getenv("JSON_URLS_TO_SCRAPE")
+    with open(fn, "w") as f:
+        json.dump([], f)
+    print(f"Scrape queue cleared (empty file): {fn}")
