@@ -19,6 +19,7 @@ class TranscriptChunk(BaseModel):
     section: str  # "prepared_remarks" | "qa"
     company: str
     quarter: str
+    call_ts: str
     text: str
     snippet: Optional[str] = None
     primary_speakers: List[Speaker]

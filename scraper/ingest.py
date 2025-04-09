@@ -3,7 +3,7 @@ import os
 from openai import OpenAI
 from pinecone import Pinecone, ServerlessSpec
 from dotenv import load_dotenv
-from typing import List
+from typing import Any, Dict, List
 
 from model import TranscriptChunk
 
@@ -45,7 +45,7 @@ def get_index(pc: Pinecone):
     return index
 
 
-def ingest_chunks(chunks: List[TranscriptChunk]):
+def ingest_chunks(chunks: List[TranscriptChunk]) -> Dict[str, Any]:
     index = get_index(pc)
     for chunk in chunks:
         embedding = get_embedding(chunk.text)
@@ -71,4 +71,12 @@ def ingest_chunks(chunks: List[TranscriptChunk]):
         index.upsert([(chunk.chunk_id, embedding, metadata)])
         print("Upserted chunk", chunk.chunk_id)
 
-    return
+    # Return metadata for entire transcript
+    chunk = chunks[0]
+    metadata = {
+        "company": chunk.company,
+        "quarter": chunk.quarter,
+        "call_ts": chunk.call_ts,
+        "processed": True,
+    }
+    return metadata

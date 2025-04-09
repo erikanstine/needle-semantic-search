@@ -1,0 +1,14 @@
+{
+  "https://www.fool.com/earnings/call-transcripts/2024/11/20/nvidia-nvda-q3-2025-earnings-call-transcript/": {
+    "company": "NVDA",
+    "quarter": "Q3 2025",
+    "call_ts": "2024-11-20T00:00:00Z",
+    "processed": true
+  },
+  "https://www.fool.com/earnings/call-transcripts/2019/10/30/apple-inc-aapl-q4-2019-earnings-call-transcript.aspx": {
+    "company": "AAPL",
+    "quarter": "Q4 2019",
+    "call_ts": "2024-11-20T00:00:00Z",
+    "processed": true
+  }
+}

@@ -6,6 +6,8 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 from typing import List, Tuple
 from model import Speaker, TranscriptChunk, PageFormatNotImplementedException
+from dateutil import parser
+from dateutil.tz import gettz
 
 
 def tokenize(text: str) -> List[int]:
@@ -19,6 +21,7 @@ class Scraper:
         self.soup = None
         self.company = None
         self.quarter = None
+        self.timestamp = None
         self.participant_map = {}
         self.current_step = 0
         self.call_stages = ["prepared_remarks", "qa"]
@@ -27,10 +30,10 @@ class Scraper:
         self.init()
 
     def init(self):
-        resp = requests.get(url)
+        resp = requests.get(self.url)
         soup = BeautifulSoup(resp.text, "html.parser")
         self.soup = self.clean_ads(soup)
-        self.company, self.quarter = self.parse_metadata()
+        self.company, self.quarter, self.timestamp = self.parse_metadata()
 
     @staticmethod
     def clean_ads(soup: BeautifulSoup) -> BeautifulSoup:
@@ -81,8 +84,13 @@ class Scraper:
         t = self.soup.find("h1").text
         reg = r".+ \((\w+)\) (Q\d \d{4}) Earnings Call Transcript"
         ticker, quarter = re.search(reg, t).groups()
+        d = self.soup.find("span", id="date").text
+        tm = self.soup.find("em", id="time").text
+        tzinfos = {"ET": gettz("America/New_York")}
+        dt = parser.parse(d + ", " + tm, tzinfos=tzinfos)
+        timestamp = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-        return ticker, quarter
+        return ticker, quarter, timestamp
 
     def populate_participant_map(self, t: Tag):
         d = {}
@@ -119,6 +127,7 @@ class Scraper:
                 ),
                 participants=current_speakers,
                 text=current_text,
+                call_ts=self.timestamp,
             )
         )
 
@@ -148,7 +157,7 @@ class Scraper:
                 or article_body.find("h2", string="Questions and Answers:")
             ]
         ):
-            raise PageFormatNotImplementedException
+            raise PageFormatNotImplementedException("Format not implemented")
 
         for ele in article_body.find(
             "h2", string="Prepared Remarks:"
