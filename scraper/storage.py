@@ -10,14 +10,33 @@ load_dotenv(dotenv_path=".env.local", override=True)
 
 
 def load_scraped_urls() -> set[str]:
-    fn = os.getenv("JSON_DATA_STORE_LOCATION")
+    fn = os.getenv("DEFAULT_STORE_PATH")
     path = Path(fn)
     if path.exists():
         with open(fn, "r") as f:
             data = json.load(f)
         # Support JSON as dict
-        return set(data.keys()) if isinstance(data, dict) else set(data)
+        return (
+            set(u for u, m in data.items() if m.get("status", "") == "scraped")
+            if isinstance(data, dict)
+            else set(data)
+        )
     return set()
+
+
+def update_url_cache(urls: Dict[str, Dict[str, Any]]):
+    fn = os.getenv("DEFAULT_STORE_PATH")
+    path = Path(fn)
+    if path.exists():
+        with open(fn, "r") as f:
+            data = json.load(f)
+    else:
+        data = {}
+
+    data.update(urls)
+
+    with open(fn, "w+") as f:
+        json.dump(data, f, indent=2)
 
 
 def write_url_error_result(url: str, error: str):
@@ -30,21 +49,6 @@ def write_url_error_result(url: str, error: str):
         data = {}
 
     data[url] = {"error": error}
-    with open(fn, "w+") as f:
-        json.dump(data, f, indent=2)
-
-
-def update_url_cache(urls: Dict[str, Dict[str, Any]]):
-    fn = os.getenv("JSON_DATA_STORE_LOCATION")
-    path = Path(fn)
-    if path.exists():
-        with open(fn, "r") as f:
-            data = json.load(f)
-    else:
-        data = {}
-
-    data.update(urls)
-
     with open(fn, "w+") as f:
         json.dump(data, f, indent=2)
 
