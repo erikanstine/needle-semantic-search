@@ -48,7 +48,10 @@ class Scraper:
         _type = ""
         role = ""
 
-        if "chief executive officer" in inner_text:
+        if "president and chief executive officer" in inner_text:
+            role = "President"
+            _type = "executive"
+        elif "chief executive officer" in inner_text:
             role = "CEO"
             _type = "executive"
         elif "chief financial officer" in inner_text:
@@ -119,6 +122,7 @@ class Scraper:
                     self.call_stages[self.current_step],
                     len(self.chunks),
                 ),
+                url=self.url,
                 section=self.call_stages[self.current_step],
                 company=self.company,
                 quarter=self.quarter,
@@ -238,10 +242,11 @@ class Scraper:
                             continue
                         current_text = current_text + " " + ele.text
 
-    def scrape(self) -> List[TranscriptChunk]:
+    def scrape(self) -> Tuple[List[TranscriptChunk], dict]:
         self.iterate_elements()
         self.add_token_counts()
-        return self.chunks
+        call_metadata = {"company": self.company, "quarter": self.quarter}
+        return self.chunks, call_metadata
 
 
 if __name__ == "__main__":
@@ -251,7 +256,7 @@ if __name__ == "__main__":
 
     scraper = Scraper(url)
 
-    chunks = scraper.scrape()
+    chunks, _ = scraper.scrape()
     for chunk in chunks:
         print("Chunk:", chunk.chunk_id)
         print("Primary Speakers:", chunk.primary_speakers)

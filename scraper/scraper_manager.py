@@ -1,37 +1,82 @@
 from ingest import ingest_chunks
+from utils.io import mark_url_as_scraped, record_url_metadata
+from utils.time_util import now_utc_iso
 from model import PageFormatNotImplementedException
 from scraper import Scraper
 from storage import (
     clear_urls_to_scrape,
     load_scraped_urls,
-    update_url_cache,
     write_url_error_result,
 )
 
-from typing import List, Optional, Tuple
+from datetime import datetime
+from typing import Any, List, Optional, Tuple
 
 
-def run_scraper_manager(
-    crawled_urls: List[str],
-) -> Tuple[Optional[List[str]], Optional[List[str]]]:
+def url_already_scraped(url: str) -> bool:
     already_scraped = load_scraped_urls()
-    new_urls = set([url for url in crawled_urls if url not in already_scraped])
-    ingested_urls = {}
+    return url in already_scraped
 
-    # TODO: Use asyncio
-    while new_urls:
-        url = new_urls.pop()
+
+def update_report(report, url, result, e=""):
+    if result not in ["scraped", "skipped", "failed"]:
+        print(f"Check unhandled report status: {result}")
+        return report
+
+    if result == "failed":
+        report["failed"][url] = e
+    else:
+        report[result].append(url)
+
+    report["total_urls"] += 1
+    return report
+
+
+def run_scraper_manager(crawled_urls: List[str], force: bool = False) -> dict[str, Any]:
+    report = {
+        "started_at": now_utc_iso(),
+        "scraped": [],
+        "skipped": [],
+        "failed": {},
+        "total_urls": 0,
+    }
+    for url in crawled_urls:
+        if not force and url_already_scraped(url):
+            print(f"Skipping already scraped url: {url}")
+            update_report(report, url, "skipped")
+            # report["skipped"].append(url)
+            continue
         try:
             scraper = Scraper(url)
-            chunks = scraper.scrape()
-            url_metadata = ingest_chunks(chunks)
-            ingested_urls[url] = url_metadata
+            chunks, call_metadata = scraper.scrape()
+            # Write URLs here, pending status
+            record_url_metadata(
+                url,
+                metadata={
+                    "status": "pending",
+                    "discovered_at": now_utc_iso(),
+                    "num_chunks": len(chunks),
+                    "company": call_metadata["company"],
+                    "quarter": call_metadata["quarter"],
+                },
+            )
+            ingest_chunks(chunks)
+            mark_url_as_scraped(url)
+            # report["scraped"].append(url)
+            update_report(report, url, "scraped")
         except Exception as e:
-            write_url_error_result(url, f"{e}")
+            record_url_metadata(url, {"status": "failed", "error": str(e)})
+            report["failed"][url] = str(e)
+            update_report(report, url, "failed", str(e))
 
-    if ingested_urls:
-        update_url_cache(ingested_urls)
-        clear_urls_to_scrape()
+    report["ended_at"] = now_utc_iso()
+    report["runtime_seconds"] = (
+        datetime.fromisoformat(report["ended_at"])
+        - datetime.fromisoformat(report["started_at"])
+    ).total_seconds()
+
+    clear_urls_to_scrape()
+    return report
 
 
 if __name__ == "__main__":

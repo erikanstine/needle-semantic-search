@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 
 
-class PageFormatNotImplementedException(BaseException):
+class PageFormatNotImplementedException(Exception):
     "Raised when we have not implemented a page format"
 
     pass
@@ -16,6 +16,7 @@ class Speaker(BaseModel):
 
 class TranscriptChunk(BaseModel):
     chunk_id: str
+    url: str
     section: str  # "prepared_remarks" | "qa"
     company: str
     quarter: str
