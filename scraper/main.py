@@ -1,9 +1,10 @@
 import argparse
 import json
 
-
-from crawler import get_new_transcript_urls
+from crawler_manager import get_urls_and_store
 from scraper_manager import run_scraper_manager
+
+from utils.report import print_run_report, save_run_report
 
 
 def main():
@@ -13,10 +14,15 @@ def main():
         choices=["crawl", "scrape", "ingest"],
         help="Which step to run: 'crawl' (discover URLs), 'scrape' (ingest known URLs), or 'ingest' (crawl + scrape)",
     )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force re-scraping URLs even if already marked as scraped",
+    )
     args = parser.parse_args()
 
     if args.step == "crawl":
-        urls = get_new_transcript_urls()
+        urls = get_urls_and_store(force=args.force)
         if not urls:
             print("No new transcripts found.")
         else:
@@ -26,17 +32,21 @@ def main():
         try:
             with open("data/urls_to_scrape.json") as f:
                 url_list = json.load(f)
-            run_scraper_manager(url_list)
+            report = run_scraper_manager(url_list, force=args.force)
+            print_run_report(report)
+            save_run_report(report)
         except FileNotFoundError:
             print("No cached URL list found. Run 'crawl' or 'ingest' first.")
-        run_scraper_manager(url_list)
 
     elif args.step == "ingest":
-        new_urls = get_new_transcript_urls()
-        if not new_urls:
+        urls = get_urls_and_store(force=args.force)
+        if not urls:
             print("No new transcripts found.")
             return
-        run_scraper_manager(new_urls)
+        print(f"Discovered {len(urls)} new transcript URLs.")
+        report = run_scraper_manager(urls, force=args.force)
+        print_run_report(report)
+        save_run_report(report)
 
 
 if __name__ == "__main__":

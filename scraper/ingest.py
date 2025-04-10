@@ -50,6 +50,7 @@ def ingest_chunks(chunks: List[TranscriptChunk]) -> Dict[str, Any]:
     for chunk in chunks:
         embedding = get_embedding(chunk.text)
         metadata = {
+            "url": chunk.url,
             "section": chunk.section,
             "company": chunk.company,
             "quarter": chunk.quarter,
