@@ -4,6 +4,7 @@ import requests
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 from typing import List, Optional
+from utils.time_util import time_block
 
 
 class Crawler:
@@ -35,6 +36,7 @@ class Crawler:
         raw_slugs = [a.attrs["href"] for a in self.soup.find_all("a")]
         return self.parse_raw_slugs(raw_slugs)
 
+    @time_block("Crawling for URLs")
     def crawl(self) -> Optional[List[str]]:
         try:
             instrument_id = self.soup.find(

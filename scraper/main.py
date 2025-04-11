@@ -11,8 +11,8 @@ def main():
     parser = argparse.ArgumentParser(description="Transcript Ingestion Pipeline")
     parser.add_argument(
         "step",
-        choices=["crawl", "scrape", "ingest"],
-        help="Which step to run: 'crawl' (discover URLs), 'scrape' (ingest known URLs), or 'ingest' (crawl + scrape)",
+        choices=["crawl", "scrape", "ingest", "batch_ingest"],
+        help="Which step to run: 'crawl' (discover URLs), 'scrape' (ingest known URLs), 'ingest' (crawl + scrape), or 'batch_ingest' (ingest in batches)",
     )
     parser.add_argument(
         "--force",
@@ -45,6 +45,15 @@ def main():
             return
         print(f"Discovered {len(urls)} new transcript URLs.")
         report = run_scraper_manager(urls, force=args.force)
+        print_run_report(report)
+        save_run_report(report)
+    elif args.step == "batch_ingest":
+        urls = get_urls_and_store(force=args.force)
+        if not urls:
+            print("No new transcripts found.")
+            return
+        print(f"Discovered {len(urls)} new transcript URLs.")
+        report = run_scraper_manager(urls, force=args.force, batch=True)
         print_run_report(report)
         save_run_report(report)
 
