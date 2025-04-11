@@ -10,6 +10,9 @@ def get_new_transcript_urls(force: bool = False) -> List[str]:
     all_discovered = []
     fortune_50_tickers = load_ticker_list()
     for ticker, exchange in fortune_50_tickers.items():
+        print(ticker)
+        if ticker in ["WMT", "AMZN", "AAPL", "UNH", "CVS"]:
+            continue
         crawler = Crawler(ticker, exchange)
         found_urls = crawler.crawl()
         all_discovered.extend(found_urls)
