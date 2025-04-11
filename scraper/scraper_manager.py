@@ -1,3 +1,4 @@
+from chunk_processor import ChunkProcessor
 from ingest import ingest_chunks
 from utils.io import mark_url_as_scraped, record_url_metadata
 from utils.time_util import now_utc_iso
@@ -10,6 +11,7 @@ from storage import (
 )
 
 from datetime import datetime
+from tqdm import tqdm
 from typing import Any, List, Optional, Tuple
 
 
@@ -32,7 +34,9 @@ def update_report(report, url, result, e=""):
     return report
 
 
-def run_scraper_manager(crawled_urls: List[str], force: bool = False) -> dict[str, Any]:
+def run_scraper_manager(
+    crawled_urls: List[str], force: bool = False, batch: bool = False
+) -> dict[str, Any]:
     report = {
         "started_at": now_utc_iso(),
         "scraped": [],
@@ -40,34 +44,63 @@ def run_scraper_manager(crawled_urls: List[str], force: bool = False) -> dict[st
         "failed": {},
         "total_urls": 0,
     }
-    for url in crawled_urls:
-        if not force and url_already_scraped(url):
-            print(f"Skipping already scraped url: {url}")
-            update_report(report, url, "skipped")
-            # report["skipped"].append(url)
-            continue
-        try:
-            scraper = Scraper(url)
-            chunks, call_metadata = scraper.scrape()
-            # Write URLs here, pending status
-            record_url_metadata(
-                url,
-                metadata={
-                    "status": "pending",
-                    "discovered_at": now_utc_iso(),
-                    "num_chunks": len(chunks),
-                    "company": call_metadata["company"],
-                    "quarter": call_metadata["quarter"],
-                },
-            )
-            ingest_chunks(chunks)
-            mark_url_as_scraped(url)
-            # report["scraped"].append(url)
-            update_report(report, url, "scraped")
-        except Exception as e:
-            record_url_metadata(url, {"status": "failed", "error": str(e)})
-            report["failed"][url] = str(e)
-            update_report(report, url, "failed", str(e))
+    if batch:
+        all_chunks = []
+        for url in tqdm(crawled_urls, desc="📄 Scraping transcripts...", leave=False):
+            if not force and url_already_scraped(url):
+                print(f"Skipping already scraped url: {url}")
+                update_report(report, url, "skipped")
+                continue
+            try:
+                scraper = Scraper(url)
+                chunks, call_metadata = scraper.scrape()
+                record_url_metadata(
+                    url,
+                    metadata={
+                        "status": "pending",
+                        "discovered_at": now_utc_iso(),
+                        "num_chunks": len(chunks),
+                        "company": call_metadata["company"],
+                        "quarter": call_metadata["quarter"],
+                    },
+                )
+                all_chunks.extend(chunks)
+                mark_url_as_scraped(url)
+                update_report(report, url, "scraped")
+            except Exception as e:
+                record_url_metadata(url, {"status": "failed", "error": str(e)})
+                report["failed"][url] = str(e)
+                update_report(report, url, "failed", str(e))
+        processor = ChunkProcessor(chunks)
+        processor.embed()
+        processor.upsert()
+    else:
+        for url in crawled_urls:
+            if not force and url_already_scraped(url):
+                print(f"Skipping already scraped url: {url}")
+                update_report(report, url, "skipped")
+                continue
+            try:
+                scraper = Scraper(url)
+                chunks, call_metadata = scraper.scrape()
+                # Write URLs here, pending status
+                record_url_metadata(
+                    url,
+                    metadata={
+                        "status": "pending",
+                        "discovered_at": now_utc_iso(),
+                        "num_chunks": len(chunks),
+                        "company": call_metadata["company"],
+                        "quarter": call_metadata["quarter"],
+                    },
+                )
+                ingest_chunks(chunks)
+                mark_url_as_scraped(url)
+                update_report(report, url, "scraped")
+            except Exception as e:
+                record_url_metadata(url, {"status": "failed", "error": str(e)})
+                report["failed"][url] = str(e)
+                update_report(report, url, "failed", str(e))
 
     report["ended_at"] = now_utc_iso()
     report["runtime_seconds"] = (

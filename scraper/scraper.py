@@ -9,6 +9,8 @@ from model import Speaker, TranscriptChunk, PageFormatNotImplementedException
 from dateutil import parser
 from dateutil.tz import gettz
 
+from utils.time_util import time_block
+
 
 def tokenize(text: str) -> List[int]:
     encoding = tiktoken.get_encoding("cl100k_base")
@@ -57,6 +59,9 @@ class Scraper:
         elif "chief financial officer" in inner_text:
             role = "CFO"
             _type = "executive"
+        elif "chief operating officer" in inner_text:
+            role = "COO"
+            _type = "executive"
         elif "senior vice president" in inner_text:
             role = "SVP"
             _type = "executive"
@@ -76,7 +81,7 @@ class Scraper:
             if "chief" in inner_text:
                 print("NEW SPEAKER TITLE:", inner_text)
             _type = "other"
-        return Speaker(name=name, type=_type, role=role if role else None)
+        return Speaker(name=name, type=_type, role=role if role else "")
 
     @staticmethod
     def get_chunk_id(company, quarter, section, n: str) -> str:
@@ -145,6 +150,7 @@ class Scraper:
             c.start_token = chunk_start
             c.end_token = chunk_end
 
+    @time_block("Scraping transcript")
     def iterate_elements(self):
         article_body = self.soup.find("div", class_="article-body")
         self.populate_participant_map(article_body)
