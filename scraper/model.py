@@ -2,12 +2,6 @@ from pydantic import BaseModel
 from typing import List, Optional
 
 
-class PageFormatNotImplementedException(Exception):
-    "Raised when we have not implemented a page format"
-
-    pass
-
-
 class Speaker(BaseModel):
     name: str
     type: str  # "executive" | "analyst" | "operator" | "other"
@@ -20,6 +14,7 @@ class TranscriptChunk(BaseModel):
     section: str  # "prepared_remarks" | "qa"
     company: str
     quarter: str
+    year: str
     call_ts: str
     text: str
     snippet: Optional[str] = None
@@ -27,3 +22,6 @@ class TranscriptChunk(BaseModel):
     participants: List[Speaker]
     start_token: Optional[int] = None
     end_token: Optional[int] = None
+
+    def transcript_key_slug(self) -> str:
+        return f"{self.company}-{self.quarter}-{self.year}".lower()

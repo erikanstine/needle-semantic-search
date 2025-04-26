@@ -1,6 +1,7 @@
 import json
 import os
 
+from datetime import datetime
 from dotenv import load_dotenv
 from pathlib import Path
 from typing import Any, Dict, List
@@ -17,7 +18,7 @@ def load_scraped_urls() -> set[str]:
             data = json.load(f)
         # Support JSON as dict
         return (
-            set(u for u, m in data.items() if m.get("status", "") == "scraped")
+            set(u for u, m in data.items() if m.get("status", "") == "fetched")
             if isinstance(data, dict)
             else set(data)
         )
@@ -55,9 +56,17 @@ def write_url_error_result(url: str, error: str):
 
 def store_crawled_urls(urls: List[str]):
     fn = os.getenv("JSON_URLS_TO_SCRAPE")
-    Path(fn).parent.mkdir(parents=True, exist_ok=True)
+    path = Path(fn)
+    if path.exists():
+        with open(fn, "r") as f:
+            data = json.load(f)
+    else:
+        data = []
+
+    data.extend(urls)
+
     with open(fn, "w") as f:
-        json.dump(urls, f, indent=2)
+        json.dump(data, f, indent=2)
 
 
 def clear_urls_to_scrape():
@@ -65,3 +74,23 @@ def clear_urls_to_scrape():
     with open(fn, "w") as f:
         json.dump([], f)
     print(f"Scrape queue cleared (empty file): {fn}")
+
+
+def save_unhandled_title(title: str, output_path: str = "data/unhandled_titles.txt"):
+    path = Path(output_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Load existing titles if the file exists
+    existing_titles = set()
+    if path.exists():
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                clean_line = line.strip().split(" | ")[0]  # Only look at title part
+                existing_titles.add(clean_line)
+
+    # Check if this title is already logged
+    title = title.strip()
+    if title not in existing_titles:
+        timestamp = datetime.utcnow().isoformat()
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(f"{title} | first_seen: {timestamp}\n")

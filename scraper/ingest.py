@@ -15,7 +15,6 @@ OAI_client = OpenAI()
 pc = Pinecone(api_key=os.getenv("PINECONE_DEFAULT_API_KEY"))
 
 
-@time_block("Embedding chunks")
 def get_embeddings(
     texts: List[str], oai_client: OpenAI = OAI_client
 ) -> List[List[float]]:
@@ -26,7 +25,6 @@ def get_embeddings(
     return [item.embedding for item in sorted_embeddings]
 
 
-@time_block("Upserting embeddings")
 def upsert_chunks(
     chunks: List[TranscriptChunk], embeddings: list[list[float]], index: Index
 ):
@@ -38,7 +36,6 @@ def upsert_chunks(
     )
 
 
-@time_block("Upserting embeddings [chunked]")
 def upsert_chunks_in_batches(
     chunks: List[TranscriptChunk],
     embeddings: List[List[float]],
@@ -116,7 +113,6 @@ def ingest_chunks(chunks: List[TranscriptChunk]) -> Dict[str, Any]:
     embeddings = get_embeddings(texts)
     upsert_chunks(chunks, embeddings, index)
 
-    # Return metadata for entire transcript
     chunk = chunks[0]
     metadata = {
         "company": chunk.company,
