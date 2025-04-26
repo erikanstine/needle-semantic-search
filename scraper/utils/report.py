@@ -55,3 +55,14 @@ def save_ingest_report(report: dict, mode: str = "ingest"):
         json.dump(report, f, indent=2)
 
     print(f"📝 Saved ingestion report to {path}")
+
+
+def save_problematic_urls(urls):
+    if urls:
+        Path("data/skipped/").mkdir(parents=True, exist_ok=True)
+        with open("data/skipped/problematic_urls.json", "w", encoding="utf-8") as f:
+            json.dump(urls, f, indent=2)
+
+        print(
+            f"📝 Saved {len(urls)} problematic URLs to data/skipped/problematic_urls.json"
+        )

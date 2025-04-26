@@ -1,4 +1,5 @@
 import argparse
+import json
 
 from tqdm import tqdm
 
@@ -7,7 +8,6 @@ from crawler_manager import get_urls_and_store
 from html_fetcher import HTMLFetcher
 from parser import Parser
 from status_tracker import StatusTracker
-from ingest import ingest_chunks
 
 from utils.report import (
     print_run_report,
@@ -59,7 +59,7 @@ def main():
     elif args.step == "fetch":
         try:
             with open("data/urls_to_scrape.json") as f:
-                url_list = f.read()
+                url_list = json.load(f)
             fetcher = HTMLFetcher(st, url_list, force=args.force)
             fetcher.fetch()
             report = fetcher.get_report()

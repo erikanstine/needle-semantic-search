@@ -49,7 +49,6 @@ class Crawler:
     @polite_sleep()
     def fetch_instrument_id(self) -> str:
         try:
-            # breakpoint()
             resp = self.session.get(
                 f"https://www.fool.com/quote/{self.exchange.lower()}/{self.ticker.lower()}/",
             )

@@ -7,6 +7,7 @@ from crawler import Crawler
 from status_tracker import StatusTracker
 from storage import load_scraped_urls, store_crawled_urls
 from utils.io import read_last_crawled, store_last_crawled
+from utils.report import save_problematic_urls
 from utils.storage import TranscriptKey
 from utils.time_util import is_older_than_a_week, now_utc
 
@@ -36,6 +37,7 @@ def get_new_transcript_urls(dry_run: bool = False, force: bool = False) -> List[
     eligible_tickers = get_eligible_tickers()
     scraped = load_scraped_urls()
     max_run = 10
+    problematic_urls = []
     print(f"Crawling for URLs from {max_run} companies")
     with tqdm(total=max_run, desc="🐛 Crawling companies for URLs...") as pbar:
         for ticker, exchange in eligible_tickers.items():
@@ -55,17 +57,20 @@ def get_new_transcript_urls(dry_run: bool = False, force: bool = False) -> List[
 
             if urls:
                 print(f"Found {len(urls)} URLs for {ticker}")
-                crawled_urls.extend(urls)
                 st = StatusTracker()
                 for url in urls:
-                    st.add(TranscriptKey.from_url(url), url)
-
+                    try:
+                        st.add(TranscriptKey.from_url(url), url)
+                    except ValueError as e:
+                        print(f"⚠️ Skipping problematic URL: {url}\nReason: {e}")
+                        problematic_urls.append(url)
+                crawled_urls.extend([u for u in urls if u not in problematic_urls])
                 pbar.update(1)
                 max_run -= 1
             else:
                 print(f"No new URLs found for {ticker}")
                 store_last_crawled(ticker, now_utc())
-
+    save_problematic_urls(problematic_urls)
     return crawled_urls
 
 

@@ -85,7 +85,7 @@ def read_last_crawled() -> dict[str, datetime]:
     if path.exists():
         with open(fn, "r") as f:
             j = json.load(f)
-        data = {k: datetime.fromisoformat(v) for k, v in j}
+        data = {k: datetime.fromisoformat(v) for k, v in j.items()}
     return data
 
 
