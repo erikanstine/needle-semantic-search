@@ -57,12 +57,16 @@ class HTMLFetcher:
         return resp.text
 
     def fetch(self):
-        for url in tqdm(self.urls, desc="📄 Fetching transcripts...", leave=False):
+        pbar = tqdm(self.urls, desc="📄 Fetching transcripts...", leave=False)
+        for url in pbar:
             if not self.force and self.already_fetched(url):
                 print(f"Skipping already fetched url: {url}")
                 self.update_report(url, "skipped")
                 continue
             tk = TranscriptKey.from_url(url)
+            pbar.set_description(
+                f"📄 {tk.company.upper()} {tk.quarter.upper()} {tk.year}"
+            )
             try:
                 html = self.fetch_html(url)
                 self.storage.write_html(tk, html)

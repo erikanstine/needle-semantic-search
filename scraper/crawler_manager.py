@@ -36,7 +36,7 @@ def get_new_transcript_urls(dry_run: bool = False, force: bool = False) -> List[
     crawled_urls = []
     eligible_tickers = get_eligible_tickers()
     scraped = load_scraped_urls()
-    max_run = 10
+    max_run = len(eligible_tickers)
     problematic_urls = []
     print(f"Crawling for URLs from {max_run} companies")
     with tqdm(total=max_run, desc="🐛 Crawling companies for URLs...") as pbar:
