@@ -8,6 +8,7 @@ from typing import List, Tuple
 
 from exceptions import PageFormatNotImplementedException, ParserInitializationError
 from utils.storage import TranscriptKey
+from utils.text_util import generate_snippet
 from storage import save_unhandled_title
 from model import Speaker, TranscriptChunk
 
@@ -95,7 +96,7 @@ class Parser:
         else:
             if "chief" in inner_text and "officer" in inner_text:
                 title = t.em.text.strip()
-                print(f"NEW SPEAKER TITLE: {inner_text}\nParsed title: {title}")
+                # print(f"NEW SPEAKER TITLE: {inner_text}\nParsed title: {title}")
                 save_unhandled_title(inner_text)
                 role = title
                 _type = "executive"
@@ -132,23 +133,23 @@ class Parser:
     def save_chunk(
         self, current_speakers: List[Speaker], current_text: str
     ) -> TranscriptChunk:
-        self.chunks.append(
-            TranscriptChunk(
-                chunk_id=self.get_chunk_id(
-                    self.call_stages[self.current_step],
-                    len(self.chunks),
-                ),
-                url=self.url,
-                section=self.call_stages[self.current_step],
-                company=self.company,
-                quarter=self.quarter,
-                year=str(self.year),
-                primary_speakers=self.parse_speakers(current_speakers),
-                participants=current_speakers,
-                text=current_text,
-                call_ts=self.timestamp,
-            )
+        chunk = TranscriptChunk(
+            chunk_id=self.get_chunk_id(
+                self.call_stages[self.current_step],
+                len(self.chunks),
+            ),
+            url=self.url,
+            section=self.call_stages[self.current_step],
+            company=self.company,
+            quarter=self.quarter,
+            year=str(self.year),
+            primary_speakers=self.parse_speakers(current_speakers),
+            participants=current_speakers,
+            text=current_text,
+            call_ts=self.timestamp,
+            snippet=generate_snippet(current_text),
         )
+        self.chunks.append(chunk)
 
     def add_token_counts(self):
         tokens_so_far = 0

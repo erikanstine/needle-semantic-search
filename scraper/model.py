@@ -17,7 +17,7 @@ class TranscriptChunk(BaseModel):
     year: str
     call_ts: str
     text: str
-    snippet: Optional[str] = None
+    snippet: str
     primary_speakers: List[Speaker]
     participants: List[Speaker]
     start_token: Optional[int] = None

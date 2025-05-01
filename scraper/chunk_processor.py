@@ -1,14 +1,21 @@
+import aiohttp
+import asyncio
+import json
 import os
+import time
 
 from openai import OpenAI
 from pinecone import Pinecone
 
+from aiolimiter import AsyncLimiter
+from datetime import datetime
 from dotenv import load_dotenv
 from more_itertools import chunked
+from pathlib import Path
 from tqdm import tqdm
 from typing import Any, Iterable, List
 
-from ingest import get_embeddings, upsert_chunks
+from ingest import get_chunk_metadata, get_embeddings, upsert_chunks
 from model import TranscriptChunk
 from utils.pinecone import get_index
 from utils.time_util import now_utc_iso
@@ -94,6 +101,70 @@ class ChunkProcessor:
                     for chunk in chunk_batch:
                         self.failed_slugs.add(chunk.transcript_key_slug())
                 pbar.update(len(chunk_batch))
+
+    async def refresh_metadata_async(
+        self, dry_run: bool = False, batch_size: int = 100
+    ):
+        limiter = AsyncLimiter(max_rate=100, time_period=1)
+        start = time.perf_counter()
+        index_host = os.getenv("PINECONE_HOST_URL")
+        api_key = os.getenv("PINECONE_DEFAULT_API_KEY")
+        failed_updates = []
+
+        async def update_metadata(session, chunk: TranscriptChunk):
+            async with limiter:
+                url = f"{index_host}/vectors/update"
+                headers = {
+                    "Api-Key": api_key,
+                    "Content-Type": "application/json",
+                    "X-Pinecone-API-Version": "2025-01",
+                }
+                payload = {
+                    "id": chunk.chunk_id,
+                    "setMetadata": get_chunk_metadata(chunk),
+                }
+
+                if dry_run:
+                    print(f"🚫 Dry run: Would update metadata for {chunk.chunk_id}")
+                    return
+
+                async with session.post(url, headers=headers, json=payload) as response:
+                    if response.status != 200:
+                        print(
+                            f"❌ Failed to update {chunk.chunk_id}: {response.status}\n{response.text}"
+                        )
+                        failed_updates.append(
+                            {
+                                "chunk_id": chunk.chunk_id,
+                                "status": response.status,
+                                "reason": await response.text(),
+                            }
+                        )
+                    # else:
+                    #     print(f"✅ Metadata refreshed for {chunk.chunk_id}")
+
+        async with aiohttp.ClientSession() as session:
+            tasks = []
+            for chunk in tqdm(self.chunks, desc="📤 Queuing metadata updates"):
+                tasks.append(update_metadata(session, chunk))
+
+                # Submit in batches
+                if len(tasks) >= batch_size:
+                    await asyncio.gather(*tasks)
+                    tasks = []
+            if tasks:
+                await asyncio.gather(*tasks)
+
+        if failed_updates:
+            Path("data/logs").mkdir(parents=True, exist_ok=True)
+            ts = datetime.utcnow().strftime("%Y-%m-%dT%H-%M-%S")
+            path = Path(f"data/logs/failed_metadata_refresh_{ts}.json")
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(failed_updates, f, indent=2)
+            print(f"📝 Saved {len(failed_updates)} failures to {path}")
+
+        duration = time.perf_counter() - start
+        print(f"⚡ Metadata refresh completed in {duration:.2f} seconds.")
 
     def get_report(self):
         return {

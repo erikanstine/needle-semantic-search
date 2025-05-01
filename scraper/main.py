@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import json
 
 from tqdm import tqdm
@@ -23,12 +24,7 @@ def main():
     parser = argparse.ArgumentParser(description="Transcript Ingestion Pipeline")
     parser.add_argument(
         "step",
-        choices=[
-            "crawl",
-            "fetch",
-            "ingest",
-            "retry",
-        ],
+        choices=["crawl", "fetch", "ingest", "retry", "refresh_metadata"],
         help="Step to run: 'crawl' (discover URLs), 'fetch' (download HTML), 'ingest' (parse and embed), or 'retry' (retry failed embeddings)",
     )
     parser.add_argument(
@@ -70,7 +66,14 @@ def main():
 
     elif args.step == "ingest":
         chunks = []
-        slugs_to_parse = st.filter_for(step="parsed", status=False)
+        if args.force:
+            print(
+                "⚠️  --force is True: All slugs will be reprocessed, even if already parsed."
+            )
+            slugs_to_parse = list(st.data.keys())[:1]
+        else:
+            print("ℹ️  --force is False: Only unparsed slugs will be processed.")
+            slugs_to_parse = st.filter_for(step="parsed", status=False)
         for slug in tqdm(slugs_to_parse, desc="Parsing transcripts"):
             tk = TranscriptKey.from_slug(slug)
             html_path = tk.to_path(data_root="data")
@@ -170,6 +173,24 @@ def main():
                 print(f"🚫 Dry run: Would have marked {slug} as embedded failure.")
         report = processor.get_report()
         save_ingest_report(report, args.step)
+
+    elif args.step == "refresh_metadata":
+
+        chunks = []
+        slugs_to_refresh = st.filter_for(step="html_saved", status=True)
+
+        for slug in tqdm(slugs_to_refresh, desc="Re-parsing HTML for metadata refresh"):
+            tk = TranscriptKey.from_slug(slug)
+            html_path = tk.to_path(data_root="data")
+            try:
+                with open(html_path, "r", encoding="utf-8") as f:
+                    parser = Parser.from_html(f.read(), tk, st.get_url(tk.slug()))
+                    chunks.extend(parser.parse_html())
+            except Exception as e:
+                print(f"⚠️ Failed to parse {slug}: {e}")
+
+        processor = ChunkProcessor(chunks)
+        asyncio.run(processor.refresh_metadata_async(dry_run=args.dry_run))
 
 
 if __name__ == "__main__":

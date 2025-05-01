@@ -89,6 +89,9 @@ def get_chunk_metadata(chunk: TranscriptChunk) -> dict[str, Any]:
         "section": chunk.section,
         "company": chunk.company,
         "quarter": chunk.quarter,
+        "year": chunk.year,
+        "snippet": chunk.snippet,
+        "call_ts": chunk.call_ts,
         **{  # AI madness
             f"primary_{k}": v
             for k, v in flatten_speakers(chunk.primary_speakers).items()
@@ -98,8 +101,6 @@ def get_chunk_metadata(chunk: TranscriptChunk) -> dict[str, Any]:
             for k, v in flatten_speakers(chunk.participants).items()
         },
     }
-    if chunk.snippet:
-        metadata["snippet"] = chunk.snippet
     if chunk.start_token:
         metadata["start_token"] = chunk.start_token
     if chunk.end_token:
