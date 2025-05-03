@@ -1,4 +1,5 @@
 from pinecone import Pinecone, ServerlessSpec
+from tqdm import tqdm
 
 
 def get_index(pc: Pinecone):

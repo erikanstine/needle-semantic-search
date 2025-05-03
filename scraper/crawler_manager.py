@@ -7,6 +7,7 @@ from crawler import Crawler
 from status_tracker import StatusTracker
 from storage import load_scraped_urls, store_crawled_urls
 from utils.io import read_last_crawled, store_last_crawled
+from utils.load_tickers import load_ticker_metadata
 from utils.report import save_problematic_urls
 from utils.storage import TranscriptKey
 from utils.time_util import is_older_than_a_week, now_utc
@@ -81,9 +82,8 @@ def get_urls_and_store(force: bool = False) -> List[str]:
 
 
 def load_ticker_list() -> Dict[str, str]:
-    with open("data/fortune_50_tickers.json", "r") as f:
-        data = json.load(f)
-    return data
+    ticker_data = load_ticker_metadata()
+    return {k.lower(): d["exchange"].lower() for k, d in ticker_data.items()}
 
 
 if __name__ == "__main__":
