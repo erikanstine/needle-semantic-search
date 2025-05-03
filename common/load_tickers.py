@@ -11,8 +11,8 @@ def load_ticker_metadata() -> dict[str, dict[str, str]]:
         e.g. { 'exchange': 'NASDAQ', 'name': 'Apple Inc.' }.
     """
     # Determine path to shared_data/tickers.json based on project root
-    repo_root = Path(__file__).resolve().parents[2]
-    json_path = repo_root / "shared_data" / "tickers.json"
+    repo_root = Path(__file__).resolve().parents[1]
+    json_path = repo_root / "common" / "tickers.json"
 
     if not json_path.is_file():
         raise FileNotFoundError(f"Ticker metadata file not found at {json_path}")

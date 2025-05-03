@@ -16,6 +16,8 @@ from .client.pineconeClient import PineconeClient
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
+from common.load_tickers import load_ticker_metadata
+
 logger = get_logger("needle-backend")
 load_dotenv()
 OAI_client = None
@@ -32,6 +34,11 @@ async def lifespan(app: FastAPI):
     app.state.oai_client = OpenAI()
     logger.info("OpenAI client initialized", extra={"client": app.state.oai_client})
 
+    app.state.ticker_metadata = load_ticker_metadata()
+    logger.info(
+        "Loaded ticker metadata into memory",
+        extra={"num_companies": len(app.state.ticker_metadata)},
+    )
     yield
     # Shutdown
 
@@ -72,8 +79,11 @@ async def log_requests(request: Request, call_next):
 
 @app.get("/metadata")
 def metadata():
+    companies = dict(
+        sorted({v["name"]: k for k, v in app.state.ticker_metadata.items()}.items())
+    )
     return {
-        "companies": {"Apple": "AAPL", "Walmart": "WMT"},
+        "companies": companies,
         "quarters": ["Q2 2024", "Q3 2024"],
     }
 
@@ -96,8 +106,7 @@ def search(request: Request, response: Response, query: SearchQuery) -> SearchRe
     top_k_results = query_index(pinecone_client, logger, embedding, query.filters)
     if not top_k_results:
         logger.debug("No grouped results.")
-        response.status_code = status.HTTP_204_NO_CONTENT
-        return SearchResponse(results=[])
+        raise HTTPException(status_code=204, detail="No seach results found")
 
     answer = summarize_snippets_with_llm(
         openai_client, logger, query.query, top_k_results

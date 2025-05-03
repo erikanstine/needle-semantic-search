@@ -49,6 +49,8 @@ class PineconeClient:
                 quarter, year = filters.quarter.split(" ")
                 f["quarter"] = quarter.lstrip("Q")
                 f["year"] = year
+            if filters.section:
+                f["section"] = filters.section
             return f
 
         result = self.index.query(

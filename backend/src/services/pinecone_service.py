@@ -1,5 +1,6 @@
 from ..client.pineconeClient import PineconeClient
 from ..model.pineconeQueryResponse import ChunkMetadata, PineconeSearchResult, Speaker
+from ..model.searchQuery import Filter
 from ..model.searchResponse import SearchResult
 
 from logging import Logger
@@ -55,10 +56,22 @@ def group_results(
     return [groups[doc_id] for doc_id in doc_order]
 
 
+def normalize_filters(filter: List[Filter]) -> List[Filter]:
+    f = Filter()
+    if filter.company:
+        f.company = filter.company.lower()
+    if filter.quarter:
+        f.quarter = filter.quarter
+    if filter.section:
+        f.section = filter.section
+    return f
+
+
 def query_index(
     pinecone_client: PineconeClient, logger: Logger, query_embedding, filters
 ) -> list[PineconeSearchResult]:
-    results = pinecone_client.query_search(query_embedding, filters).to_dict()
+    norm_filter = normalize_filters(filters)
+    results = pinecone_client.query_search(query_embedding, norm_filter).to_dict()
 
     def parse_metadata(m: dict) -> ChunkMetadata:
         filtered_keys = [

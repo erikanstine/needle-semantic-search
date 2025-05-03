@@ -286,5 +286,9 @@
   "ABBV": {
     "exchange": "NYSE",
     "name": "AbbVie Inc."
+  },
+  "NFLX": {
+    "exchange": "NASDAQ",
+    "name": "Netflix"
   }
 }

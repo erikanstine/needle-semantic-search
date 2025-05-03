@@ -3,11 +3,13 @@ import json
 from tqdm import tqdm
 from typing import Dict, List
 
+from common.load_tickers import load_ticker_metadata
+
 from crawler import Crawler
 from status_tracker import StatusTracker
 from storage import load_scraped_urls, store_crawled_urls
 from utils.io import read_last_crawled, store_last_crawled
-from utils.load_tickers import load_ticker_metadata
+from common.load_tickers import load_ticker_metadata
 from utils.report import save_problematic_urls
 from utils.storage import TranscriptKey
 from utils.time_util import is_older_than_a_week, now_utc

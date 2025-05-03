@@ -6,11 +6,36 @@ function App() {
   const [query, setQuery] = useState('')
   const [companyTicker, setCompanyTicker] = useState('')
   const [quarter, setQuarter] = useState('')
+  const [section, setSection] = useState('prepared_remarks')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [companiesList, setCompaniesList] = useState([])
   const [quartersList, setQuartersList] = useState([])
   const [answer, setAnswer] = useState('')
+
+  // --- demo sample queries ---------------------------
+  const SAMPLE_QUERIES = [
+    'How is Microsoft positioning Copilot for enterprise?',
+    'Which companies blamed higher freight costs in 2023?',
+    'What did Apple say about buybacks last quarter?',
+    'Who mentioned generative AI opportunities in Q1 2024?',
+    'Did NVIDIA report any GPU supply constraints in 2022?',
+    'Which companies lowered revenue guidance in Q4 2023?',
+    'What did Google say about antitrust litigation?',
+    'How is Amazon targeting net‑zero emissions?',
+    'Who discussed rising interest rates in the Q&A?',
+    'Did Netflix mention subscription price increases?',
+    'How is Tesla responding to BYD competition?',
+    'Which CEOs talked about layoffs in 2023?'
+  ]
+
+  // Pick 4 random queries once per mount
+  const [displayQueries] = useState(() => {
+    const shuffled = [...SAMPLE_QUERIES].sort(() => 0.5 - Math.random())
+    return shuffled.slice(0, 4)
+  })
+  // ----------------------------------------------------
+
   const [snippets, setSnippets] = useState([])
 
   const SkeletonCard = () => (
@@ -54,8 +79,9 @@ function App() {
       const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/search`, {
         query: query,
         filters: {
-          ...(companyTicker && { ticker: companyTicker }),
+          ...(companyTicker && { company: companyTicker }),
           ...(quarter && { quarter }),
+          ...(section && { section }),
         }
       }, {
         headers: {
@@ -80,11 +106,6 @@ function App() {
   return (
     <div className='max-w-2xl mx-auto py-10 px-4 sm:px-6 lg:px-8'>
       <div className="flex flex-col items-center space-y-3 my-8">
-      {/* <img
-        src="/needle_logo_orig.png"
-        alt="Needle Semantic Search logo"
-        className="h-40 w-auto mx-auto mb-6"
-      /> */}
       <h1 className="text-3xl font-bold text-grey-800">🔍 Needle Semantic Search</h1>
         <p className="text-gray-500">
           Instantly query&nbsp;&amp;&nbsp;summarise Fortune&nbsp;75 earnings-call transcripts.
@@ -104,11 +125,7 @@ function App() {
       </div>
       <form className='max-w-2xl mx-auto' onSubmit={handleSearch}>
         <div className="flex justify-center flex-wrap gap-2 mb-4">
-          {[
-            'What did Apple say about AI strategy?',
-            'Who mentioned supply‑chain risk in 2024?',
-            'How are margins trending for Tesla?'
-          ].map((sample) => (
+          {displayQueries.map((sample) => (
             <button
               key={sample}
               type="button"
@@ -126,29 +143,31 @@ function App() {
           className="w-full px-5 py-3 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500"
           placeholder="What did Apple say about AI strategy?"
         />
-        <div className='flex gap-4 justify-center my-4'>
+        <div className="flex flex-col sm:flex-row justify-center gap-4 my-4">
           {/* Company filter */}
-          <select 
-            className="border rounded-lg shadow-sm px-4 py-2 bg-white"
-              value={companyTicker}
-              onChange={e => setCompanyTicker(e.target.value)}
+          <select
+            className="border rounded-lg shadow-sm px-4 py-2 bg-white max-w-[280px] sm:max-w-[320px] truncate text-sm"
+            value={companyTicker}
+            onChange={(e) => setCompanyTicker(e.target.value)}
           >
             <option value="">All Companies</option>
-            {companiesList.map(({name, ticker}) => (
+            {companiesList.map(({ name, ticker }) => (
               <option key={ticker} value={ticker}>
                 {`${name} (${ticker.toUpperCase()})`}
               </option>
             ))}
           </select>
 
-          {/* Quarters */}
-          <select className='border rounded-lg shadow-sm px-4 py-2 bg-white' value={quarter} onChange={e => setQuarter(e.target.value)}>
-            <option value="">All Quarters</option>
-            {quartersList.map((q) => (
-              <option key={q} value={q}>{q}</option>
-            ))}
+          {/* Section filter */}
+          <select
+            className="border rounded-lg shadow-sm px-4 py-2 bg-white min-w-[180px] text-sm"
+            value={section}
+            onChange={(e) => setSection(e.target.value)}
+          >
+            <option value="">All Sections</option>
+            <option value="prepared_remarks">Prepared Remarks</option>
+            <option value="qa">Q&amp;A</option>
           </select>
-
         </div>
         <button type="submit" className="mt-2 mb-6 bg-blue-600 hover:bg-blue-600/90 text-white rounded-lg shadow px-6 py-3">
           Search Transcripts
