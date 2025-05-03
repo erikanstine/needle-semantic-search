@@ -1,8 +1,10 @@
 from ..client.pineconeClient import PineconeClient
-from ..model.pineconeQueryResponse import PineconeSearchResult
+from ..model.pineconeQueryResponse import ChunkMetadata, PineconeSearchResult, Speaker
 from ..model.searchResponse import SearchResult
 
 from logging import Logger
+from typing import List
+from pydantic_core import ValidationError
 
 
 def map_company_name(company: str) -> str:
@@ -55,10 +57,45 @@ def group_results(
 
 def query_index(
     pinecone_client: PineconeClient, logger: Logger, query_embedding, filters
-) -> list[SearchResult]:
+) -> list[PineconeSearchResult]:
     results = pinecone_client.query_search(query_embedding, filters).to_dict()
-    pinecone_matches = [PineconeSearchResult(**sr) for sr in results["matches"]]
 
-    matches = group_results(pinecone_matches, logger)
+    def parse_metadata(m: dict) -> ChunkMetadata:
+        filtered_keys = [
+            "participant_names",
+            "participant_roles",
+            "participant_types",
+            "primary_names",
+            "primary_roles",
+            "primary_types",
+        ]
 
-    return matches
+        def get_speakers(s: str, m: dict) -> List[Speaker]:
+            return [
+                Speaker(name=n, type=t, role=r)
+                for n, t, r in zip(m[f"{s}_names"], m[f"{s}_roles"], m[f"{s}_types"])
+            ]
+
+        chunk_metadata = None
+        try:
+            participants = get_speakers("participant", m)
+            primary_speakers = get_speakers("primary", m)
+            chunk_metadata = ChunkMetadata(
+                **{k: v for k, v in m.items() if k not in filtered_keys},
+                participants=participants,
+                primary_speakers=primary_speakers,
+            )
+        except ValidationError as e:
+            breakpoint()
+            print(f"Validation error for {m}:", e)
+
+        return chunk_metadata
+
+    pinecone_matches = [
+        PineconeSearchResult(
+            id=sr["id"], score=sr["score"], metadata=parse_metadata(sr["metadata"])
+        )
+        for sr in results["matches"]
+    ]
+
+    return pinecone_matches
