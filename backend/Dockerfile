@@ -6,8 +6,7 @@ COPY setup.py .
 COPY common/ ./common
 COPY backend/ ./backend
 
-RUN pip install --upgrade pip && \
-    pip install .
+RUN pip install --upgrade pip && pip install .
 
 RUN pip install -r backend/requirements.txt
 
