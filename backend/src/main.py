@@ -135,17 +135,3 @@ def search(request: Request, response: Response, query: SearchQuery) -> SearchRe
             for sr in top_k_results
         ],
     )
-
-
-# TODO: Add snippet to metadata
-"""
-[user query]
-    ↓
-embed_query(query)
-    ↓
-pinecone_search(embedding)
-    ↓
-summarize_chunks_with_llm(chunks, query)
-    ↓
-[final answer]
-"""
