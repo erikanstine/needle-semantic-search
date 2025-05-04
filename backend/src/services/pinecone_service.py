@@ -99,7 +99,6 @@ def query_index(
                 primary_speakers=primary_speakers,
             )
         except ValidationError as e:
-            breakpoint()
             print(f"Validation error for {m}:", e)
 
         return chunk_metadata
