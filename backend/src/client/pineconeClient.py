@@ -9,7 +9,6 @@ from ..model.pineconeQueryResponse import PineconeSearchResult
 load_dotenv()
 
 HOST_URL = os.getenv("PINECONE_HOST_URL")
-# INDEX_NAME = "needle-earnings-transcripts"
 INDEX_NAME = "transcripts-v2"
 
 
