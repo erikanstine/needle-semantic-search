@@ -9,13 +9,14 @@ from ..model.pineconeQueryResponse import PineconeSearchResult
 load_dotenv()
 
 HOST_URL = os.getenv("PINECONE_HOST_URL")
-INDEX_NAME = "needle-earnings-transcripts"
+# INDEX_NAME = "needle-earnings-transcripts"
+INDEX_NAME = "transcripts-v2"
 
 
 class PineconeClient:
     def __init__(self, logger: Logger):
-        self.index = self.init_index()
         self.logger = logger
+        self.index = self.init_index()
 
     def init_index(self, index_name: str = INDEX_NAME) -> Pinecone:
         pc = Pinecone(api_key=os.getenv("PINECONE_DEFAULT_API_KEY"))
@@ -31,6 +32,10 @@ class PineconeClient:
                 tags={"environment": "development"},
             )
         index = pc.Index(host=HOST_URL)
+        self.logger.info(
+            "Pinecone index initiated.",
+            extra={"index_name": index_name, "index_url": HOST_URL},
+        )
         return index
 
     def query_search(self, query_embedding, filters) -> list[PineconeSearchResult]:
@@ -44,11 +49,13 @@ class PineconeClient:
                 quarter, year = filters.quarter.split(" ")
                 f["quarter"] = quarter.lstrip("Q")
                 f["year"] = year
+            if filters.section:
+                f["section"] = filters.section
             return f
 
         result = self.index.query(
             vector=query_embedding,
-            top_k=15,
+            top_k=5,
             include_metadata=True,
             include_values=False,
             filter=build_filter(filters),

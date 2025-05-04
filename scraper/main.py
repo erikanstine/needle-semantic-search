@@ -1,6 +1,8 @@
 import argparse
 import asyncio
+import concurrent.futures
 import json
+import os
 
 from tqdm import tqdm
 
@@ -24,7 +26,15 @@ def main():
     parser = argparse.ArgumentParser(description="Transcript Ingestion Pipeline")
     parser.add_argument(
         "step",
-        choices=["crawl", "fetch", "ingest", "retry", "refresh_metadata"],
+        choices=[
+            "crawl",
+            "fetch",
+            "ingest",
+            "retry",
+            "refresh_metadata",
+            "extract_candidates",
+            "regenerate_snippets",
+        ],
         help="Step to run: 'crawl' (discover URLs), 'fetch' (download HTML), 'ingest' (parse and embed), or 'retry' (retry failed embeddings)",
     )
     parser.add_argument(
@@ -190,6 +200,95 @@ def main():
                 print(f"⚠️ Failed to parse {slug}: {e}")
 
         processor = ChunkProcessor(chunks)
+        asyncio.run(processor.refresh_metadata_async(dry_run=args.dry_run))
+
+    elif args.step == "extract_candidates":
+        from collections import Counter
+        from utils.text_util import split_sentences
+
+        counts = Counter()
+        slug_url_pairs = [(slug, st.get_url(slug)) for slug in st.data.keys()]
+
+        def _process_transcript(pair):
+            slug, url = pair
+            tk = TranscriptKey.from_slug(slug)
+            html_path = tk.to_path(data_root="data")
+            local_counter = Counter()
+            try:
+                with open(html_path, "r", encoding="utf-8") as f:
+                    parser = Parser.from_html(f.read(), tk, url)
+                    chunks = parser.parse_html()
+            except Exception as e:
+                return local_counter
+            for chunk in chunks:
+                for sent in split_sentences(chunk.text):
+                    norm = sent.strip().rstrip(".!?").lower()
+                    if len(norm.split()) <= 5:
+                        local_counter[norm] += 1
+            return local_counter
+
+        max_workers = min(32, (os.cpu_count() or 1) + 4)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as pool:
+            futures = [
+                pool.submit(_process_transcript, pair) for pair in slug_url_pairs
+            ]
+            for fut in tqdm(
+                concurrent.futures.as_completed(futures),
+                total=len(futures),
+                desc="🔍 Scanning transcripts for filler candidate sentences...",
+            ):
+                counts.update(fut.result())
+
+        # Finally, print your top candidates
+        print("\nTop filler candidates (count ≥ 20):")
+        for sentence, cnt in counts.most_common():
+            if cnt < 20:
+                break
+            print(f"{cnt:4d}  {sentence}")
+
+    elif args.step == "regenerate_snippets":
+        from utils.text_util import generate_snippet
+
+        # File to record chunks that are all filler
+        filler_log = open("data/all_filler_chunks.txt", "w", encoding="utf-8")
+        all_chunks = []
+
+        def process_slug(slug):
+            tk = TranscriptKey.from_slug(slug)
+            html_path = tk.to_path(data_root="data")
+            try:
+                with open(html_path, "r", encoding="utf-8") as f:
+                    parser = Parser.from_html(f.read(), tk, st.get_url(slug))
+                    chunks = parser.parse_html()
+            except Exception as e:
+                return []
+            for chunk in chunks:
+                snippet = generate_snippet(chunk.text)
+                # attach regenerated snippet
+                chunk.snippet = snippet
+                if not snippet:
+                    # log slug and chunk identifier
+                    filler_log.write(
+                        f"{slug}\t{chunk.primary_speakers[0]}\t{chunk.chunk_id}\n"
+                    )
+            return chunks
+
+        # Multithread processing
+        slugs = list(st.data.keys())
+        max_workers = min(32, (os.cpu_count() or 1) + 4)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as pool:
+            futures = [pool.submit(process_slug, slug) for slug in slugs]
+            for fut in tqdm(
+                concurrent.futures.as_completed(futures),
+                total=len(futures),
+                desc="Regenerating snippets",
+            ):
+                all_chunks.extend(fut.result())
+
+        filler_log.close()
+
+        # Refresh metadata with new snippets
+        processor = ChunkProcessor(all_chunks)
         asyncio.run(processor.refresh_metadata_async(dry_run=args.dry_run))
 
 

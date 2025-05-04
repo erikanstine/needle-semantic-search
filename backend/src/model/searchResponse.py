@@ -10,13 +10,16 @@ class SearchResult(BaseModel):
     snippets: list[str]
 
 
-class SummarizedSearchResult(BaseModel):
+class Snippet(BaseModel):
     company: str
     quarter: str
     year: str
     url: str
-    summary: list[str]
+    participants: dict[str, str]
+    section: str
+    text: str
 
 
 class SearchResponse(BaseModel):
-    results: list[SummarizedSearchResult]
+    answer: str
+    snippets: list[Snippet]

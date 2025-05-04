@@ -10,11 +10,13 @@ from .services.openai_service import fetch_embeddings, summarize_snippets_with_l
 from .services.pinecone_service import query_index
 
 from .model.searchQuery import SearchQuery
-from .model.searchResponse import SearchResponse, SearchResult
+from .model.searchResponse import SearchResponse, Snippet
 
 from .client.pineconeClient import PineconeClient
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
+
+from common.load_tickers import load_ticker_metadata
 
 logger = get_logger("needle-backend")
 load_dotenv()
@@ -32,6 +34,11 @@ async def lifespan(app: FastAPI):
     app.state.oai_client = OpenAI()
     logger.info("OpenAI client initialized", extra={"client": app.state.oai_client})
 
+    app.state.ticker_metadata = load_ticker_metadata()
+    logger.info(
+        "Loaded ticker metadata into memory",
+        extra={"num_companies": len(app.state.ticker_metadata)},
+    )
     yield
     # Shutdown
 
@@ -70,36 +77,75 @@ async def log_requests(request: Request, call_next):
     return response
 
 
+@app.get("/metadata")
+def metadata():
+    companies = dict(
+        sorted({v["name"]: k for k, v in app.state.ticker_metadata.items()}.items())
+    )
+    return {
+        "companies": companies,
+        "quarters": ["Q2 2024", "Q3 2024"],
+    }
+
+
 @app.post("/search")
 def search(request: Request, response: Response, query: SearchQuery) -> SearchResponse:
     start = time.perf_counter()
     logger.info("Semantic search query received", extra={"query": query})
     if not query.query:
         raise HTTPException(status_code=422, detail="Invalid query")
+
     openai_client = request.app.state.oai_client
     pinecone_client = request.app.state.pinecone_client
-
     assert pinecone_client is not None, "Pinecone client not initialized"
     assert openai_client is not None, "OpenAI client not initialized"
 
     embedding = fetch_embeddings(openai_client, query.query, logger)
-    grouped_search_results = query_index(
-        pinecone_client, logger, embedding, query.filters
-    )
-    if not grouped_search_results:
+
+    # Get 3-5 best results
+    top_k_results = query_index(pinecone_client, logger, embedding, query.filters)
+    if not top_k_results:
         logger.debug("No grouped results.")
-        response.status_code = status.HTTP_204_NO_CONTENT
-        return SearchResponse(results=[])
-    search_results = []
-    for result in grouped_search_results:
-        r = summarize_snippets_with_llm(openai_client, logger, query.query, result)
-        if not r:
-            continue
-        search_results.append(r)
+        raise HTTPException(status_code=204, detail="No seach results found")
+
+    answer = summarize_snippets_with_llm(
+        openai_client, logger, query.query, top_k_results
+    )
 
     request_time = time.perf_counter() - start
     logger.info(
         "Returning semantic search results",
-        extra={"result_count": len(search_results), "request_time": request_time},
+        extra={"request_time": request_time},
     )
-    return SearchResponse(results=search_results)
+    return SearchResponse(
+        answer=answer,
+        snippets=[
+            Snippet(
+                company=sr.metadata.company,
+                quarter=sr.metadata.quarter,
+                year=sr.metadata.year,
+                url=sr.metadata.url,
+                participants={
+                    sp.name: sp.role if sp.role else sp.type
+                    for sp in sr.metadata.participants
+                },
+                section=sr.metadata.section,
+                text=sr.metadata.snippet,
+            )
+            for sr in top_k_results
+        ],
+    )
+
+
+# TODO: Add snippet to metadata
+"""
+[user query]
+    ↓
+embed_query(query)
+    ↓
+pinecone_search(embedding)
+    ↓
+summarize_chunks_with_llm(chunks, query)
+    ↓
+[final answer]
+"""

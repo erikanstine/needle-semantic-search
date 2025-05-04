@@ -1,0 +1,294 @@
+{
+  "WMT": {
+    "exchange": "NYSE",
+    "name": "Walmart Inc."
+  },
+  "AMZN": {
+    "exchange": "NASDAQ",
+    "name": "Amazon.com, Inc."
+  },
+  "AAPL": {
+    "exchange": "NASDAQ",
+    "name": "Apple Inc."
+  },
+  "UNH": {
+    "exchange": "NYSE",
+    "name": "UnitedHealth Group Incorporated"
+  },
+  "CVS": {
+    "exchange": "NYSE",
+    "name": "CVS Health Corporation"
+  },
+  "XOM": {
+    "exchange": "NYSE",
+    "name": "Exxon Mobil Corporation"
+  },
+  "GOOGL": {
+    "exchange": "NASDAQ",
+    "name": "Alphabet Inc. (Class A)"
+  },
+  "MCK": {
+    "exchange": "NYSE",
+    "name": "McKesson Corporation"
+  },
+  "COR": {
+    "exchange": "NYSE",
+    "name": "Cencora, Inc. (formerly AmerisourceBergen)"
+  },
+  "COST": {
+    "exchange": "NASDAQ",
+    "name": "Costco Wholesale Corporation"
+  },
+  "JPM": {
+    "exchange": "NYSE",
+    "name": "JPMorgan Chase & Co."
+  },
+  "MSFT": {
+    "exchange": "NASDAQ",
+    "name": "Microsoft Corporation"
+  },
+  "CAH": {
+    "exchange": "NYSE",
+    "name": "Cardinal Health, Inc."
+  },
+  "CVX": {
+    "exchange": "NYSE",
+    "name": "Chevron Corporation"
+  },
+  "CI": {
+    "exchange": "NYSE",
+    "name": "The Cigna Group"
+  },
+  "F": {
+    "exchange": "NYSE",
+    "name": "Ford Motor Company"
+  },
+  "BAC": {
+    "exchange": "NYSE",
+    "name": "Bank of America Corporation"
+  },
+  "GM": {
+    "exchange": "NYSE",
+    "name": "General Motors Company"
+  },
+  "ELV": {
+    "exchange": "NYSE",
+    "name": "Elevance Health, Inc."
+  },
+  "C": {
+    "exchange": "NYSE",
+    "name": "Citigroup Inc."
+  },
+  "CNC": {
+    "exchange": "NYSE",
+    "name": "Centene Corporation"
+  },
+  "HD": {
+    "exchange": "NYSE",
+    "name": "The Home Depot, Inc."
+  },
+  "MPC": {
+    "exchange": "NYSE",
+    "name": "Marathon Petroleum Corporation"
+  },
+  "KR": {
+    "exchange": "NYSE",
+    "name": "The Kroger Co."
+  },
+  "PSX": {
+    "exchange": "NYSE",
+    "name": "Phillips 66"
+  },
+  "WBA": {
+    "exchange": "NASDAQ",
+    "name": "Walgreens Boots Alliance, Inc."
+  },
+  "VLO": {
+    "exchange": "NYSE",
+    "name": "Valero Energy Corporation"
+  },
+  "META": {
+    "exchange": "NASDAQ",
+    "name": "Meta Platforms, Inc."
+  },
+  "VZ": {
+    "exchange": "NYSE",
+    "name": "Verizon Communications Inc."
+  },
+  "T": {
+    "exchange": "NYSE",
+    "name": "AT&T Inc."
+  },
+  "CMCSA": {
+    "exchange": "NASDAQ",
+    "name": "Comcast Corporation"
+  },
+  "WFC": {
+    "exchange": "NYSE",
+    "name": "Wells Fargo & Company"
+  },
+  "GS": {
+    "exchange": "NYSE",
+    "name": "The Goldman Sachs Group, Inc."
+  },
+  "TGT": {
+    "exchange": "NYSE",
+    "name": "Target Corporation"
+  },
+  "HUM": {
+    "exchange": "NYSE",
+    "name": "Humana Inc."
+  },
+  "TSLA": {
+    "exchange": "NASDAQ",
+    "name": "Tesla, Inc."
+  },
+  "MS": {
+    "exchange": "NYSE",
+    "name": "Morgan Stanley"
+  },
+  "JNJ": {
+    "exchange": "NYSE",
+    "name": "Johnson & Johnson"
+  },
+  "ADM": {
+    "exchange": "NYSE",
+    "name": "Archer-Daniels-Midland Company"
+  },
+  "PEP": {
+    "exchange": "NASDAQ",
+    "name": "PepsiCo, Inc."
+  },
+  "UPS": {
+    "exchange": "NYSE",
+    "name": "United Parcel Service, Inc."
+  },
+  "FDX": {
+    "exchange": "NYSE",
+    "name": "FedEx Corporation"
+  },
+  "DIS": {
+    "exchange": "NYSE",
+    "name": "The Walt Disney Company"
+  },
+  "DELL": {
+    "exchange": "NYSE",
+    "name": "Dell Technologies Inc."
+  },
+  "LOW": {
+    "exchange": "NYSE",
+    "name": "Lowe\u2019s Companies, Inc."
+  },
+  "PG": {
+    "exchange": "NYSE",
+    "name": "Procter & Gamble Company"
+  },
+  "V": {
+    "exchange": "NYSE",
+    "name": "Visa Inc."
+  },
+  "NVDA": {
+    "exchange": "NASDAQ",
+    "name": "NVIDIA Corporation"
+  },
+  "ET": {
+    "exchange": "NYSE",
+    "name": "Energy Transfer LP"
+  },
+  "BA": {
+    "exchange": "NYSE",
+    "name": "The Boeing Company"
+  },
+  "ACI": {
+    "exchange": "NYSE",
+    "name": "Albertsons Companies, Inc."
+  },
+  "SYY": {
+    "exchange": "NYSE",
+    "name": "Sysco Corporation"
+  },
+  "RTX": {
+    "exchange": "NYSE",
+    "name": "RTX Corporation (formerly Raytheon Technologies)"
+  },
+  "GE": {
+    "exchange": "NYSE",
+    "name": "General Electric Company"
+  },
+  "LMT": {
+    "exchange": "NYSE",
+    "name": "Lockheed Martin Corporation"
+  },
+  "AXP": {
+    "exchange": "NYSE",
+    "name": "American Express Company"
+  },
+  "CAT": {
+    "exchange": "NYSE",
+    "name": "Caterpillar Inc."
+  },
+  "MET": {
+    "exchange": "NYSE",
+    "name": "MetLife, Inc."
+  },
+  "HCA": {
+    "exchange": "NYSE",
+    "name": "HCA Healthcare, Inc."
+  },
+  "PGR": {
+    "exchange": "NYSE",
+    "name": "The Progressive Corporation"
+  },
+  "IBM": {
+    "exchange": "NYSE",
+    "name": "International Business Machines Corporation"
+  },
+  "DE": {
+    "exchange": "NYSE",
+    "name": "Deere & Company"
+  },
+  "SNEX": {
+    "exchange": "NASDAQ",
+    "name": "StoneX Group Inc."
+  },
+  "MRK": {
+    "exchange": "NYSE",
+    "name": "Merck & Co., Inc."
+  },
+  "COP": {
+    "exchange": "NYSE",
+    "name": "ConocoPhillips"
+  },
+  "PFE": {
+    "exchange": "NYSE",
+    "name": "Pfizer Inc."
+  },
+  "DAL": {
+    "exchange": "NYSE",
+    "name": "Delta Air Lines, Inc."
+  },
+  "SNX": {
+    "exchange": "NYSE",
+    "name": "TD SYNNEX Corporation"
+  },
+  "ALL": {
+    "exchange": "NYSE",
+    "name": "The Allstate Corporation"
+  },
+  "CSCO": {
+    "exchange": "NASDAQ",
+    "name": "Cisco Systems, Inc."
+  },
+  "CHTR": {
+    "exchange": "NASDAQ",
+    "name": "Charter Communications, Inc."
+  },
+  "ABBV": {
+    "exchange": "NYSE",
+    "name": "AbbVie Inc."
+  },
+  "NFLX": {
+    "exchange": "NASDAQ",
+    "name": "Netflix"
+  }
+}
