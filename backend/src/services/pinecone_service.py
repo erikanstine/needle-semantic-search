@@ -8,13 +8,6 @@ from typing import List
 from pydantic_core import ValidationError
 
 
-def map_company_name(company: str) -> str:
-    c_name_map = {"Amazoncom": "Amazon"}
-    if company in c_name_map:
-        return c_name_map[company]
-    return company
-
-
 def group_results(
     results: list[PineconeSearchResult], logger: Logger, threshold: float = 0.4
 ) -> list[SearchResult]:
@@ -32,7 +25,7 @@ def group_results(
         document = r.metadata.document
         if document not in groups:
             groups[document] = SearchResult(
-                company=map_company_name(r.metadata.company),
+                company=r.metadata.company,
                 quarter=str(r.metadata.quarter),
                 year=str(r.metadata.year),
                 url=r.metadata.url,
