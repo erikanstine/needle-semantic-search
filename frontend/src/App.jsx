@@ -16,17 +16,11 @@ function App() {
   // --- demo sample queries ---------------------------
   const SAMPLE_QUERIES = [
     'How is Microsoft positioning Copilot for enterprise?',
-    'Which companies blamed higher freight costs in 2023?',
-    'What did Apple say about buybacks last quarter?',
     'Who mentioned generative AI opportunities in Q1 2024?',
     'Did NVIDIA report any GPU supply constraints in 2022?',
-    'Which companies lowered revenue guidance in Q4 2023?',
-    'What did Google say about antitrust litigation?',
-    'How is Amazon targeting net‑zero emissions?',
     'Who discussed rising interest rates in the Q&A?',
     'Did Netflix mention subscription price increases?',
     'How is Tesla responding to BYD competition?',
-    'Which CEOs talked about layoffs in 2023?'
   ]
 
   // Pick 4 random queries once per mount

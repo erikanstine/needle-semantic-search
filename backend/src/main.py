@@ -84,7 +84,7 @@ def metadata():
     )
     return {
         "companies": companies,
-        "quarters": ["Q2 2024", "Q3 2024"],
+        "quarters": [],
     }
 
 
