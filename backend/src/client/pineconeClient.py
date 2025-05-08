@@ -1,4 +1,5 @@
 import os
+import time
 
 from dotenv import load_dotenv
 from logging import Logger
@@ -38,6 +39,8 @@ class PineconeClient:
         return index
 
     def query_search(self, query_embedding, filters) -> list[PineconeSearchResult]:
+        start = time.perf_counter()
+
         def build_filter(filters):
             f = {}
             if not filters:
@@ -59,7 +62,9 @@ class PineconeClient:
             include_values=False,
             filter=build_filter(filters),
         )
+        request_time = time.perf_counter() - start
         self.logger.info(
-            "Pinecone query returned", extra={"result_count": len(result.matches)}
+            "Pinecone query returned",
+            extra={"result_count": len(result.matches), "request_time": request_time},
         )
         return result
