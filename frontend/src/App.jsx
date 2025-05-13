@@ -15,7 +15,6 @@ function App() {
 
   // --- demo sample queries ---------------------------
   const SAMPLE_QUERIES = [
-    'How is Microsoft positioning Copilot for enterprise?',
     'Who mentioned generative AI opportunities in Q1 2024?',
     'Did NVIDIA report any GPU supply constraints in 2022?',
     'Who discussed rising interest rates in the Q&A?',
