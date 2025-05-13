@@ -6,7 +6,7 @@ function App() {
   const [query, setQuery] = useState('')
   const [companyTicker, setCompanyTicker] = useState('')
   const [quarter, setQuarter] = useState('')
-  const [section, setSection] = useState('prepared_remarks')
+  const [section, setSection] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [companiesList, setCompaniesList] = useState([])
@@ -15,11 +15,14 @@ function App() {
 
   // --- demo sample queries ---------------------------
   const SAMPLE_QUERIES = [
+    'Which CEOs talked about layoffs or workforce reductions in 2023?',
+    'Who mentioned semiconductor supply constraints in 2021?',
     'Who mentioned generative AI opportunities in Q1 2024?',
-    'Did NVIDIA report any GPU supply constraints in 2022?',
-    'Who discussed rising interest rates in the Q&A?',
-    'Did Netflix mention subscription price increases?',
-    'How is Tesla responding to BYD competition?',
+    'How did Microsoft describe cloud growth drivers in Q1 2024?',
+    'Which companies cited foreign-exchange headwinds in 2022?',
+    'Who discussed returning cash to shareholders via dividends in 2023?',
+    'Who referenced inventory write-downs due to weak consumer demand in 2022?',
+    'How did Visa describe cross-border payment growth drivers in Q1 2024?'
   ]
 
   // Pick 4 random queries once per mount

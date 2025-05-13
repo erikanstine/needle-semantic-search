@@ -57,7 +57,7 @@ class PineconeClient:
 
         result = self.index.query(
             vector=query_embedding,
-            top_k=5,
+            top_k=8,
             include_metadata=True,
             include_values=False,
             filter=build_filter(filters),
