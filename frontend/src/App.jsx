@@ -211,39 +211,45 @@ function App() {
                 Show supporting excerpts ({snippets.length})
               </summary>
               <ul className="mt-4 space-y-3 pl-4 text-left">
-                {snippets.map((s, idx) => (
-                  <li
-                    key={idx}
-                    onClick={() => window.open(s.url, '_blank', 'noopener')}
-                    className="flex flex-col space-y-1 p-2 rounded-md hover:bg-gray-50 cursor-pointer"
-                    title="Open full transcript in a new tab"
-                  >
-                    <blockquote className='text-grey-800 leading-snug italic'>
-                      "{s.text}"
-                    </blockquote>
-                    <div className="flex items-center flex-wrap gap-2 text-sm text-gray-500">
-                      {/* Speakers / company / quarter / year */}
-                      <span>
-                        {formatSpeakers(s.participants)}
-                        {formatSpeakers(s.participants) && ' • '}
-                        {s.company.toUpperCase()} {s.quarter.toUpperCase()} {s.year}
-                      </span>
-                      {/* Section pill */}
-                      {s.section && (
-                        <span
-                          className={
-                            'px-2 py-[2px] rounded-full font-medium ' +
-                            (s.section === 'qa'
-                              ? 'bg-indigo-100 text-indigo-700'
-                              : 'bg-emerald-100 text-emerald-700')
-                          }
-                        >
-                          {s.section === 'qa' ? 'Q&A' : 'Prepared Remarks'}
+                {snippets.map((s, idx) => {
+                  const highlightUrl = `${s.url}#:~:text=${encodeURIComponent(
+                    s.text.replace(/[“”"]/g, '').split(/\s+/).slice(0, 8).join(' ')
+                  )}`
+
+                  return (
+                    <li
+                      key={idx}
+                      onClick={() => window.open(highlightUrl, '_blank', 'noopener')}
+                      className="flex flex-col space-y-1 p-2 rounded-md hover:bg-gray-50 cursor-pointer"
+                      title="Open full transcript in a new tab"
+                    >
+                      <blockquote className='text-grey-800 leading-snug italic'>
+                        "{s.text}"
+                      </blockquote>
+                      <div className="flex items-center flex-wrap gap-2 text-sm text-gray-500">
+                        {/* Speakers / company / quarter / year */}
+                        <span>
+                          {formatSpeakers(s.participants)}
+                          {formatSpeakers(s.participants) && ' • '}
+                          {s.company.toUpperCase()} {s.quarter.toUpperCase()} {s.year}
                         </span>
-                      )}
-                    </div>
-                  </li>
-                ))}
+                        {/* Section pill */}
+                        {s.section && (
+                          <span
+                            className={
+                              'px-2 py-[2px] rounded-full font-medium ' +
+                              (s.section === 'qa'
+                                ? 'bg-indigo-100 text-indigo-700'
+                                : 'bg-emerald-100 text-emerald-700')
+                            }
+                          >
+                            {s.section === 'qa' ? 'Q&A' : 'Prepared Remarks'}
+                          </span>
+                        )}
+                      </div>
+                    </li>
+                  )
+                })}
               </ul>
             </details>
           )}
