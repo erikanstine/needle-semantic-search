@@ -16,13 +16,13 @@ function App() {
   // --- demo sample queries ---------------------------
   const SAMPLE_QUERIES = [
     'Which CEOs talked about layoffs or workforce reductions in 2023?',
-    'Who mentioned semiconductor supply constraints in 2021?',
     'Who mentioned generative AI opportunities in Q1 2024?',
     'How did Microsoft describe cloud growth drivers in Q1 2024?',
     'Which companies cited foreign-exchange headwinds in 2022?',
     'Who discussed returning cash to shareholders via dividends in 2023?',
     'Who referenced inventory write-downs due to weak consumer demand in 2022?',
-    'How did Visa describe cross-border payment growth drivers in Q1 2024?'
+    'How did Visa describe cross-border payment growth drivers in Q1 2024?',
+    'Who mentioned raising prices to offset inflation in 2022?'
   ]
 
   // Pick 4 random queries once per mount
@@ -67,6 +67,7 @@ function App() {
 
   const handleSearch = async (e) => {
     e.preventDefault()
+    if (query.trim() === '') return
     setLoading(true)
     setError(null)
     setAnswer('')
@@ -165,9 +166,25 @@ function App() {
             <option value="qa">Q&amp;A</option>
           </select>
         </div>
-        <button type="submit" className="mt-2 mb-6 bg-blue-600 hover:bg-blue-600/90 text-white rounded-lg shadow px-6 py-3">
-          Search Transcripts
-        </button>
+        {/*
+          Grey-out Search button when query is empty.
+        */}
+        {(() => {
+          const isQueryEmpty = !query.trim()
+          return (
+            <button
+              type="submit"
+              disabled={isQueryEmpty}
+              className={`mt-2 mb-6 rounded-lg shadow px-6 py-3 text-white ${
+                isQueryEmpty
+                  ? 'bg-blue-300 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-600/90'
+              }`}
+            >
+              Search Transcripts
+            </button>
+          )
+        })()}
       </form>
 
       {/* No results */}
@@ -195,23 +212,36 @@ function App() {
               </summary>
               <ul className="mt-4 space-y-3 pl-4 text-left">
                 {snippets.map((s, idx) => (
-                  <li key={idx} className="flex flex-col space-y-1">
+                  <li
+                    key={idx}
+                    onClick={() => window.open(s.url, '_blank', 'noopener')}
+                    className="flex flex-col space-y-1 p-2 rounded-md hover:bg-gray-50 cursor-pointer"
+                    title="Open full transcript in a new tab"
+                  >
                     <blockquote className='text-grey-800 leading-snug italic'>
                       "{s.text}"
                     </blockquote>
-                    <span className="text-sm text-gray-500">
-                      {formatSpeakers(s.participants)}{formatSpeakers(s.participants) && ' • '}
-                      {s.company.toUpperCase()} {s.quarter.toUpperCase()} {s.year}
-                    </span>
-                    <span className="text-gray-700">{s.snippet}</span>
-                    <a
-                      href={s.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-indigo-600 mt-1"
-                    >
-                      View Transcript →
-                    </a>
+                    <div className="flex items-center flex-wrap gap-2 text-sm text-gray-500">
+                      {/* Speakers / company / quarter / year */}
+                      <span>
+                        {formatSpeakers(s.participants)}
+                        {formatSpeakers(s.participants) && ' • '}
+                        {s.company.toUpperCase()} {s.quarter.toUpperCase()} {s.year}
+                      </span>
+                      {/* Section pill */}
+                      {s.section && (
+                        <span
+                          className={
+                            'px-2 py-[2px] rounded-full font-medium ' +
+                            (s.section === 'qa'
+                              ? 'bg-indigo-100 text-indigo-700'
+                              : 'bg-emerald-100 text-emerald-700')
+                          }
+                        >
+                          {s.section === 'qa' ? 'Q&A' : 'Prepared Remarks'}
+                        </span>
+                      )}
+                    </div>
                   </li>
                 ))}
               </ul>

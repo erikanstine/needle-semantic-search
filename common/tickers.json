@@ -290,5 +290,9 @@
   "NFLX": {
     "exchange": "NASDAQ",
     "name": "Netflix"
+  },
+  "SBUX": {
+    "exchange": "NASDAQ",
+    "name": "Starbucks Corp."
   }
 }
