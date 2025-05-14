@@ -9,11 +9,11 @@ A semantic search engine designed specifically for earnings call transcripts.
 The data ingestion pipeline is driven by `/scraper/main.py`, a CLI tool. It supports the following commands:
 - `crawl`: The utility looks at `/common/tickers.json`, and pulls transcript URLs from [Motley Fool](https://www.fool.com/). These are written to the local file system.
 - `fetch`: The utility looks at the list of URLs to pull, checks whether we have already pulled, and if not saves the HTML to local storage for future ingestion.
-- `ingest`: The utility finds eligible saved HTML and pulls it into the ingestion pipeline
+- `ingest`: The utility finds eligible saved HTML and pulls it into the ingestion pipeline:
   1. The HTML is parsed via beautiful soup. Text and metadata are extracted into associated chunks, split by speaker in _prepared remarks_, and by back and forth exchange in _question & answer_.
   2. Chunk texts are filtered for filler words, and then sent to the [OpenAI Embeddings API](https://platform.openai.com/docs/guides/embeddings). _API requests are batched in token-aware fashion._
   3. Vector embeddings are combined with document metadata and uploaded to Pinecone (Vector DB). _API requests are batched to minimize network traffic, maximize speed_
-- `retry`: Retries failed steps of the pipeline, 
+- `retry`: Retries failed steps of the pipeline. 
 - `refresh_metadata`: If changes have been made to the metadata parsing logic, regenerate the metadata and update existing chunks. _The ~20k chunks are updated asynchronously, reducing process from 40 mins to under 3 mins_.
 - `extract_candidates`: Do a bit of data science to determine most common filler words by frequency. We can tweak the frequency threshold to filter out more/less noise within the chunks.
 - `regenerate_snippets`: Following the `extract_candidates` process, we can regenerate the snippets.
