@@ -6,24 +6,35 @@ A semantic search engine designed specifically for earnings call transcripts.
 
 ## Architecture
 ### Data ingestion pipeline
-[Motley Fool](https://www.fool.com/) transcript URLs are input to a function within the jupyter notebook.
-1. Text is extracted from page via beautiful soup.
-2. Text is chunked into length 500 strings and sent to the [OpenAI API](https://platform.openai.com/docs/guides/embeddings)
-3. Vector embeddings are combined with document metadata and uploaded to Pinecone (Vector DB).
+The data ingestion pipeline is driven by `/scraper/main.py`, a CLI tool. It supports the following commands:
+- `crawl`: The utility looks at `/common/tickers.json`, and pulls transcript URLs from [Motley Fool](https://www.fool.com/). These are written to the local file system.
+- `fetch`: The utility looks at the list of URLs to pull, checks whether we have already pulled, and if not saves the HTML to local storage for future ingestion.
+- `ingest`: The utility finds eligible saved HTML and pulls it into the ingestion pipeline
+  1. The HTML is parsed via beautiful soup. Text and metadata are extracted into associated chunks, split by speaker in _prepared remarks_, and by back and forth exchange in _question & answer_.
+  2. Chunk texts are filtered for filler words, and then sent to the [OpenAI Embeddings API](https://platform.openai.com/docs/guides/embeddings). _API requests are batched in token-aware fashion._
+  3. Vector embeddings are combined with document metadata and uploaded to Pinecone (Vector DB). _API requests are batched to minimize network traffic, maximize speed_
+- `retry`: Retries failed steps of the pipeline, 
+- `refresh_metadata`: If changes have been made to the metadata parsing logic, regenerate the metadata and update existing chunks. _The ~20k chunks are updated asynchronously, reducing process from 40 mins to under 3 mins_.
+- `extract_candidates`: Do a bit of data science to determine most common filler words by frequency. We can tweak the frequency threshold to filter out more/less noise within the chunks.
+- `regenerate_snippets`: Following the `extract_candidates` process, we can regenerate the snippets.
+
 <img src="docs/data_ingestion_pipeline.png">
 
 ### App
 1. User inputs a search query, complete with optional filters.
 2. Needle API (FastAPI server hosted on [Fly.io](https://fly.io/)) receives request and fetches the embeddings of the search query from the same OpenAI API as above.
 3. A query is sent to Pinecone, leveraging their `index.query()` method, which also handles metadata filtering.
-4. Reults are returned (relevant chunks and associated metadata) and displayed to the user.
+4. The top k (currently 8) results are wrapped into an LLM query in order to summarize and provide insights.
+5. Results are returned (relevant chunks and associated metadata) and displayed to the user.
 <img src="docs/app_diagram.png">
 
 ## Future Improvements
-- Improve results presentation: One result per document, not per chunk.
-- Semantic summaries: Show users a concise summary of relevant search results, leverage GPT-3.5
-- Analytics/Observability: Implement logging, metrics, gain insight into click through rate.
-- Automated Data Pipeline: Automate weekly ingestion flow, expand current MVP scope of supported earnings calls.
+- [x] Improve results presentation: One result per document, not per chunk.
+- [x] Semantic summaries: Show users a concise summary of relevant search results, leverage GPT-3.5
+- [] Analytics/Observability: Implement logging, metrics, gain insight into click through rate.
+  - We have logging, but no capture of CTR, no metrics.
+- [] Automated Data Pipeline: Automate weekly ingestion flow, expand current MVP scope of supported earnings calls.
+  - Automation still to come, but CLI tool automates much of the pipeline.
 
 ## Running Needle Locally
 ### Local setup
@@ -45,10 +56,6 @@ A semantic search engine designed specifically for earnings call transcripts.
         pip install -r requirements.txt
     ```
 ### Running
-#### Data Ingestion
-1. Run jupyter notebook sequentially, familiarize yourself with the various steps, functions. Run ad hoc, as needed.
-    1. Run from within virtualenv (`source .venv/bin/activate`)
-    2. `jupyter notebook`
 #### App
 1. Spin up local server (From `/backend`, within virtualenv) 
     1. Either... FastAPI dev
