@@ -31,9 +31,9 @@ The data ingestion pipeline is driven by `/scraper/main.py`, a CLI tool. It supp
 ## Future Improvements
 - [x] Improve results presentation: One result per document, not per chunk.
 - [x] Semantic summaries: Show users a concise summary of relevant search results, leverage GPT-3.5
-- [] Analytics/Observability: Implement logging, metrics, gain insight into click through rate.
+- [ ] Analytics/Observability: Implement logging, metrics, gain insight into click through rate.
   - We have logging, but no capture of CTR, no metrics.
-- [] Automated Data Pipeline: Automate weekly ingestion flow, expand current MVP scope of supported earnings calls.
+- [ ] Automated Data Pipeline: Automate weekly ingestion flow, expand current MVP scope of supported earnings calls.
   - Automation still to come, but CLI tool automates much of the pipeline.
 
 ## Running Needle Locally
