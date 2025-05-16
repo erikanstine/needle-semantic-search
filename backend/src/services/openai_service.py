@@ -1,22 +1,33 @@
+import hashlib
 import time
 
+from ..cache import LRUCache
 from logging import Logger
 from openai import OpenAI
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 from ..model.pineconeQueryResponse import PineconeSearchResult
 
 
-def fetch_embeddings(oai_client: OpenAI, search_query: str, logger: Logger):
+def fetch_embeddings(
+    oai_client: OpenAI, search_query: str, logger: Logger, cache: LRUCache
+):
     logger.debug("Fetching query embeddings.")
     start = time.perf_counter()
-    response = oai_client.embeddings.create(
-        input=search_query, model="text-embedding-3-small"
-    )
+    hashed_query = hashlib.sha256(search_query.encode("utf-8")).hexdigest()
+    cached_embedding = cache.get(hashed_query)
+    if cached_embedding:
+        embedding = cached_embedding
+    else:
+        response = oai_client.embeddings.create(
+            input=search_query, model="text-embedding-3-small"
+        )
+        embedding = response.data[0].embedding
+        cache.set(hashed_query, embedding)
     request_time = time.perf_counter() - start
     logger.info("Fetched query embeddings.", extra={"request_time": request_time})
 
-    return response.data[0].embedding
+    return embedding, cache
 
 
 def get_prompt(query: str, results: List[PineconeSearchResult]) -> str:

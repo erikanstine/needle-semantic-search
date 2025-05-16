@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from openai import OpenAI
 
+from .cache import LRUCache
 from .logger import get_logger
 from .services.openai_service import fetch_embeddings, summarize_snippets_with_llm
 from .services.pinecone_service import query_index
@@ -33,12 +34,12 @@ async def lifespan(app: FastAPI):
     )
     app.state.oai_client = OpenAI()
     logger.info("OpenAI client initialized", extra={"client": app.state.oai_client})
-
     app.state.ticker_metadata = load_ticker_metadata()
     logger.info(
         "Loaded ticker metadata into memory",
         extra={"num_companies": len(app.state.ticker_metadata)},
     )
+    app.state.embeddings_cache = LRUCache()
     yield
     # Shutdown
 
@@ -100,13 +101,17 @@ def search(request: Request, response: Response, query: SearchQuery) -> SearchRe
     assert pinecone_client is not None, "Pinecone client not initialized"
     assert openai_client is not None, "OpenAI client not initialized"
 
-    embedding = fetch_embeddings(openai_client, query.query, logger)
+    embeddings_cache = request.app.state.embeddings_cache
+    embedding, embeddings_cache = fetch_embeddings(
+        openai_client, query.query, logger, embeddings_cache
+    )
+    app.state.embeddings_cache = embeddings_cache
 
     # Get 3-5 best results
     top_k_results = query_index(pinecone_client, logger, embedding, query.filters)
     if not top_k_results:
         logger.debug("No grouped results.")
-        raise HTTPException(status_code=204, detail="No seach results found")
+        raise HTTPException(status_code=204, detail="No search results found")
 
     answer = summarize_snippets_with_llm(
         openai_client, logger, query.query, top_k_results
