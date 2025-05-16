@@ -135,7 +135,7 @@ function App() {
   return (
     <div className='max-w-2xl mx-auto py-10 px-4 sm:px-6 lg:px-8'>
       <div className="flex flex-col items-center space-y-3 my-8">
-      <h1 className="text-3xl font-bold text-grey-800">🔍 Needle Semantic Search</h1>
+      <h1 className="text-3xl font-bold text-grey-800">🪡 Needle Semantic Search 🪡</h1>
         <p className="text-gray-500">
           Instantly query&nbsp;&amp;&nbsp;summarise Fortune&nbsp;75 earnings-call transcripts.
         </p>
