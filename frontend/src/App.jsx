@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import axios from 'axios'
 
+import { getCachedResult, setCachedResult } from './cache'
+
 function App() {
   const [query, setQuery] = useState('')
   const [companyTicker, setCompanyTicker] = useState('')
@@ -12,6 +14,7 @@ function App() {
   const [companiesList, setCompaniesList] = useState([])
   const [quartersList, setQuartersList] = useState([])
   const [answer, setAnswer] = useState('')
+  const [cacheCleared, setCacheCleared] = useState(false)
 
   // --- demo sample queries ---------------------------
   const SAMPLE_QUERIES = [
@@ -73,6 +76,15 @@ function App() {
     setAnswer('')
     setSnippets([])
     try {
+      const queryKey = JSON.stringify({ query, companyTicker, quarter, section})
+      const cached = getCachedResult(queryKey)
+
+      if (cached) {
+        setAnswer(cached.answer)
+        setSnippets(cached.snippets)
+        return
+      }
+
       const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/search`, {
         query: query,
         filters: {
@@ -91,6 +103,10 @@ function App() {
       } else {
         setAnswer(response.data.answer)
         setSnippets(response.data.snippets || [])
+        setCachedResult(queryKey, {
+          answer: response.data.answer,
+          snippets: response.data.snippets || [],
+        })
       }
     } catch (err) {
       console.error("Search error:", err)
@@ -132,6 +148,20 @@ function App() {
               {sample}
             </button>
           ))}
+        </div>
+        <div className="text-center w-full text-sm mb-2">
+          <button
+            type="button"
+            onClick={() => {
+              localStorage.removeItem('needleQueryCache')
+              setCacheCleared(true)
+              setTimeout(() => setCacheCleared(false), 2500)
+            }}
+            className="text-gray-400 hover:text-gray-600 underline focus:outline-none"
+            title="Clear cached results"
+          >
+            Clear Local Cache
+          </button>
         </div>
         <input
           type="text"
@@ -253,6 +283,11 @@ function App() {
               </ul>
             </details>
           )}
+        </div>
+      )}
+      {cacheCleared && (
+        <div className="fixed bottom-4 right-4 z-50 bg-green-600 text-white text-sm px-4 py-2 rounded shadow-lg transition-opacity duration-300">
+          Client-side cache cleared
         </div>
       )}
     </div>
