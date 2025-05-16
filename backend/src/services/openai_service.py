@@ -72,29 +72,39 @@ def parse_summary(summary: str) -> list[str]:
     return [bp.strip() for bp in bullet_points]
 
 
-def summarize_snippets_with_llm(
+def generate_llm_response(
     oai_client: OpenAI,
     logger: Logger,
     search_query: str,
     top_k_results: List[PineconeSearchResult],
-) -> str:
+    results_cache: LRUCache,
+) -> Tuple[str, LRUCache]:
     prompt = get_prompt(search_query, top_k_results)
+    hashed_prompt = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
 
     start = time.perf_counter()
-    completion = oai_client.chat.completions.create(
-        model="gpt-4o-mini",
-        temperature=0.2,
-        messages=[
-            {"role": "user", "content": prompt.strip()},
-        ],
-    )
+    if results_cache.get(hashed_prompt):
+        llm_response = results_cache.get(hashed_prompt)
+    else:
+        completion = oai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            temperature=0.2,
+            messages=[
+                {"role": "user", "content": prompt.strip()},
+            ],
+        )
+        llm_response = completion.choices[0].message.content.strip()
+        results_cache.set(hashed_prompt, llm_response)
+
     request_time = time.perf_counter() - start
-    llm_response = completion.choices[0].message.content.strip()
     if "No directly relevant insights found." == llm_response:
-        logger.info("Transcript not relevant", extra={"request_time": request_time})
+        logger.info(
+            "Could not generate answer to user query based on snippets",
+            extra={"request_time": request_time},
+        )
         return None
     logger.info(
-        "Transcript successfully summarized",
+        "Successfully generated LLM response",
         extra={"request_time": request_time},
     )
-    return llm_response
+    return llm_response, results_cache

@@ -7,7 +7,7 @@ from openai import OpenAI
 
 from .cache import LRUCache
 from .logger import get_logger
-from .services.openai_service import fetch_embeddings, summarize_snippets_with_llm
+from .services.openai_service import fetch_embeddings, generate_llm_response
 from .services.pinecone_service import query_index
 
 from .model.searchQuery import SearchQuery
@@ -40,6 +40,7 @@ async def lifespan(app: FastAPI):
         extra={"num_companies": len(app.state.ticker_metadata)},
     )
     app.state.embeddings_cache = LRUCache()
+    app.state.llm_response_cache = LRUCache()
     yield
     # Shutdown
 
@@ -113,9 +114,11 @@ def search(request: Request, response: Response, query: SearchQuery) -> SearchRe
         logger.debug("No grouped results.")
         raise HTTPException(status_code=204, detail="No search results found")
 
-    answer = summarize_snippets_with_llm(
-        openai_client, logger, query.query, top_k_results
+    llm_response_cache = request.app.state.llm_response_cache
+    answer, llm_response_cache = generate_llm_response(
+        openai_client, logger, query.query, top_k_results, llm_response_cache
     )
+    app.state.llm_response_cache = llm_response_cache
 
     request_time = time.perf_counter() - start
     logger.info(
