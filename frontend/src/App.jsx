@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import './App.css'
 import axios from 'axios'
 
@@ -15,6 +15,8 @@ function App() {
   const [quartersList, setQuartersList] = useState([])
   const [answer, setAnswer] = useState('')
   const [cacheCleared, setCacheCleared] = useState(false)
+  const [showInfoBox, setShowInfoBox] = useState(false)
+  const infoBoxRef = useRef(null)
 
   // --- demo sample queries ---------------------------
   const SAMPLE_QUERIES = [
@@ -47,6 +49,20 @@ function App() {
       </div>
     </div>
   )
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (infoBoxRef.current && !infoBoxRef.current.contains(event.target)) {
+        setShowInfoBox(false)
+      }
+    }
+    if (showInfoBox) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showInfoBox])
 
   useEffect(() => {
     axios
@@ -124,17 +140,24 @@ function App() {
           Instantly query&nbsp;&amp;&nbsp;summarise Fortune&nbsp;75 earnings-call transcripts.
         </p>
 
-        {/* inline “info” dropdown */}
-        <details className="mt-2 inline-block">
-          <summary className="cursor-pointer text-blue-600 text-sm inline-flex items-center gap-1 select-none">
+        <div className="relative mt-2">
+          <button
+            onClick={() => setShowInfoBox(!showInfoBox)}
+            className="cursor-pointer text-blue-600 text-sm inline-flex items-center gap-1 select-none focus:outline-none"
+          >
             <span className="inline-block w-4 h-4 rounded-full border border-current flex items-center justify-center text-[10px] leading-none">i</span>
             <span>What’s in the index?</span>
-          </summary>
-          <div className="mt-2 text-gray-500 text-sm max-w-md mx-auto">
-            Needle indexes ~6-7 years of quarterly earnings transcripts from the top&nbsp;75 publicly-traded companies.
-            Results combine semantic search with an LLM-generated answer plus supporting excerpts.
-          </div>
-        </details>
+          </button>
+          {showInfoBox && (
+            <div
+              ref={infoBoxRef}
+              className="absolute top-8 left-1/2 -translate-x-1/2 z-10 w-[300px] bg-white text-gray-700 text-sm border border-gray-300 rounded-lg shadow-lg p-4 cursor-pointer"
+              onClick={() => setShowInfoBox(false)}
+            >
+              Needle indexes ~6–7 years of quarterly earnings transcripts from the top&nbsp;75 publicly traded companies. Results combine semantic search with an LLM-generated answer and supporting excerpts.
+            </div>
+          )}
+        </div>
       </div>
       <form className='max-w-2xl mx-auto' onSubmit={handleSearch}>
         <div className="flex justify-center flex-wrap gap-2 mb-4">
