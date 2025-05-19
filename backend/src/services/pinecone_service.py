@@ -4,7 +4,7 @@ from ..model.searchQuery import Filter
 from ..model.searchResponse import SearchResult
 
 from logging import Logger
-from typing import List
+from typing import List, Optional
 from pydantic_core import ValidationError
 
 
@@ -49,8 +49,10 @@ def group_results(
     return [groups[doc_id] for doc_id in doc_order]
 
 
-def normalize_filters(filter: List[Filter]) -> List[Filter]:
+def normalize_filters(filter: Optional[Filter]) -> Filter:
     f = Filter()
+    if not filter:
+        return f
     if filter.company:
         f.company = filter.company.lower()
     if filter.quarter:

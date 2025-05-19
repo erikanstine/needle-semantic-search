@@ -4,7 +4,7 @@ import time
 from ..cache import LRUCache
 from logging import Logger
 from openai import OpenAI
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 from ..model.pineconeQueryResponse import PineconeSearchResult
 
@@ -78,7 +78,7 @@ def generate_llm_response(
     search_query: str,
     top_k_results: List[PineconeSearchResult],
     results_cache: LRUCache,
-) -> Tuple[str, LRUCache]:
+) -> Tuple[Optional[str], LRUCache]:
     prompt = get_prompt(search_query, top_k_results)
     hashed_prompt = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
 
@@ -102,7 +102,7 @@ def generate_llm_response(
             "Could not generate answer to user query based on snippets",
             extra={"request_time": request_time},
         )
-        return None
+        return None, results_cache
     logger.info(
         "Successfully generated LLM response",
         extra={"request_time": request_time},
