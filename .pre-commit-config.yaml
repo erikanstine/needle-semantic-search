@@ -6,4 +6,9 @@ repos:
         entry: ./scripts/run_changed_tests.sh
         language: script
         pass_filenames: false
+      - id: run-changed-linters
+        name: Run linters for changed directories
+        entry: ./scripts/run_changed_linters.sh
+        language: script
+        pass_filenames: false
 

@@ -83,12 +83,15 @@ Verify the backend is running by hitting `http://localhost:8000/healthz`. It ret
 
 ## Pre-commit Hook
 This repository uses [pre-commit](https://pre-commit.com/) to automatically run
-unit tests on directories with staged changes. Install the hook with:
+unit tests and linters on directories with staged changes. Install the hook with:
 
 ```bash
 pre-commit install
 ```
 
-Before each commit, `pytest` will run for any top-level directory that contains
-tests and has staged modifications (e.g. `backend`, `scraper`). If no such
-changes are present, the hook exits without running tests.
+Before each commit, `pytest` runs for any top-level directory that contains
+tests and has staged modifications (e.g. `backend`, `scraper`). When code in
+`backend`, `scraper`, `common`, or `setup.py` changes, `black` checks the files.
+If the `frontend` directory has modifications, ESLint runs. If none of these
+directories have staged changes, the hook exits without running tests or
+linters.
