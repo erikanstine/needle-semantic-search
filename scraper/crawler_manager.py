@@ -78,7 +78,7 @@ def get_new_transcript_urls(dry_run: bool = False, force: bool = False) -> List[
 
 
 def get_urls_and_store(force: bool = False) -> List[str]:
-    new_urls = get_new_transcript_urls(force)
+    new_urls = get_new_transcript_urls(force=force)
     store_crawled_urls(new_urls)
     return new_urls
 
