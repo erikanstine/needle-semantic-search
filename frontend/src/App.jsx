@@ -10,12 +10,10 @@ import { getCachedResult, setCachedResult } from './cache'
 function App() {
   const [query, setQuery] = useState('')
   const [companyTicker, setCompanyTicker] = useState('')
-  const [quarter, setQuarter] = useState('')
   const [section, setSection] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [companiesList, setCompaniesList] = useState([])
-  const [quartersList, setQuartersList] = useState([])
   const [answer, setAnswer] = useState('')
   const [cacheCleared, setCacheCleared] = useState(false)
   const [showInfoBox, setShowInfoBox] = useState(false)
@@ -75,7 +73,6 @@ function App() {
         const parsed = Object.entries(raw).map(([name, ticker]) => ({ name, ticker}))
         console.log(raw, parsed)
         setCompaniesList(parsed)
-        setQuartersList(res.data.quarters || [])
       })
       .catch((err) => console.error('Metadata fetch error:', err))
   }, [])
@@ -95,7 +92,7 @@ function App() {
     setAnswer('')
     setSnippets([])
     try {
-      const queryKey = JSON.stringify({ query, companyTicker, quarter, section})
+      const queryKey = JSON.stringify({ query, companyTicker, section })
       const cached = getCachedResult(queryKey)
 
       if (cached) {
@@ -108,7 +105,6 @@ function App() {
         query: query,
         filters: {
           ...(companyTicker && { company: companyTicker }),
-          ...(quarter && { quarter }),
           ...(section && { section }),
         }
       }, {
