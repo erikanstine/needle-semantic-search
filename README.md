@@ -76,3 +76,16 @@ The data ingestion pipeline is driven by `/scraper/main.py`, a CLI tool. It supp
     ```VITE_BACKEND_URL=http://localhost:8000```
     3. `npm run dev`
     4. Frontend will be running at `http://localhost:5173`
+
+
+## Pre-commit Hook
+This repository uses [pre-commit](https://pre-commit.com/) to automatically run
+unit tests on directories with staged changes. Install the hook with:
+
+```bash
+pre-commit install
+```
+
+Before each commit, `pytest` will run for any top-level directory that contains
+tests and has staged modifications (e.g. `backend`, `scraper`). If no such
+changes are present, the hook exits without running tests.
