@@ -9,7 +9,7 @@ Currently implemented as a CLI utility, this tool had been used to
   - Upsert (Pinecone Index)
 
 ### Crawl
-Given a list of tickers (~Fortune 50), pull URLs for earnings transcripts
+Given a list of tickers (~Fortune 75), pull URLs for earnings transcripts
 - Stored timestamps of when no new URLs were most recently found for a given ticker (ie they've all been seen/processed)
 - Write new URLs to file
 
