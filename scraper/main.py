@@ -185,7 +185,6 @@ def main():
         save_ingest_report(report, args.step)
 
     elif args.step == "refresh_metadata":
-
         chunks = []
         slugs_to_refresh = st.filter_for(step="html_saved", status=True)
 
