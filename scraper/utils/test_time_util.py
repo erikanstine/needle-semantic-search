@@ -1,5 +1,10 @@
 from datetime import datetime, timedelta, timezone
-from scraper.utils.time_util import now_utc_iso, is_older_than_a_week, time_block, polite_sleep
+from scraper.utils.time_util import (
+    now_utc_iso,
+    is_older_than_a_week,
+    time_block,
+    polite_sleep,
+)
 
 
 def test_now_utc_iso_has_timezone():
