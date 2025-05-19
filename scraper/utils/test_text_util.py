@@ -40,6 +40,8 @@ def test_generate_snippet_respects_max_chars():
     text = "Hello world! How are you? I'm fine. This is a test sentence."
     snippet = generate_snippet(text, max_chars=25)
     assert snippet.startswith("Hello world!")
+    assert len(snippet) <= 25
+    assert snippet.endswith("...")
 
 
 def test_generate_snippet_empty():
