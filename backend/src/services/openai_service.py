@@ -63,7 +63,7 @@ def get_prompt(query: str, results: List[PineconeSearchResult]) -> str:
     - Maintain professional, neutral, financial analyst tone.
     - Match the scope of the user's query: if it is broad, answer in a similar vein. Likewise narrow scope. For example:
         Query "Who was talking about supply chain disruption" should result in an answer mentioning multiple companies or people discussing supply chain disruption.
-        Query "What was Apple's AI chip strategy in 2024" should result in an answer specifically about information/exceprts from 2024 about Apple's AI chip strategy.
+        Query "What was Apple's AI chip strategy in 2024" should result in an answer specifically about information/excerpts from 2024 about Apple's AI chip strategy.
     """
 
 
