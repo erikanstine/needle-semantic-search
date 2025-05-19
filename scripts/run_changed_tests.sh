@@ -31,3 +31,4 @@ for dir in "${dirs_to_test[@]}"; do
     echo "Running tests in $dir"
     pytest "$dir"
 
+done
