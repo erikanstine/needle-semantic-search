@@ -52,6 +52,7 @@ def get_cached_instrument_id(ticker: str) -> Optional[str]:
         with open(fn, "r") as f:
             data = json.load(f)
         return data.get(ticker, "")
+    return ""
 
 
 def store_instrument_id(ticker: str, instrument_id: str):
