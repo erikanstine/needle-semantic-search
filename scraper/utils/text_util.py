@@ -89,14 +89,18 @@ def generate_snippet(
             if len(snippet) > max_chars:
                 snippet = snippet[:max_chars].rsplit(" ", 1)[0] + "..."
             return snippet
-    # Fallback: take sentences in order until limit
+    # Fallback: take sentences in order until the character limit is reached.
+    # If we hit the limit mid-sentence, truncate on a word boundary and
+    # append an ellipsis.
     snippet = ""
     for sentence in sentences:
-        if len(snippet) + len(sentence) + 1 <= max_chars:
-            snippet += sentence + " "
+        candidate = f"{snippet} {sentence}".strip()
+        if len(candidate) <= max_chars:
+            snippet = candidate
         else:
-            break
-    return snippet.strip()
+            snippet = candidate[:max_chars].rsplit(" ", 1)[0].rstrip() + "..."
+            return snippet
+    return snippet
 
 
 def generate_snippets(
