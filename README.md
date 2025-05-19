@@ -77,6 +77,9 @@ The data ingestion pipeline is driven by `/scraper/main.py`, a CLI tool. It supp
     3. `npm run dev`
     4. Frontend will be running at `http://localhost:5173`
 
+### Health Check
+Verify the backend is running by hitting `http://localhost:8000/healthz`. It returns `{"status": "ok"}`.
+
 
 ## Pre-commit Hook
 This repository uses [pre-commit](https://pre-commit.com/) to automatically run
