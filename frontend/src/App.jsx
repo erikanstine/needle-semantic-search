@@ -180,7 +180,7 @@ function App() {
               setTimeout(() => setCacheCleared(false), 2500)
             }}
             className="text-gray-400 hover:text-gray-600 underline focus:outline-none"
-            title="Clear cached results"
+            title="Stored results are cached for about 5 minutes. Click to remove cached data."
           >
             Clear Local Cache
           </button>
@@ -198,6 +198,7 @@ function App() {
             className="border rounded-lg shadow-sm px-4 py-2 bg-white max-w-[280px] sm:max-w-[320px] truncate text-sm"
             value={companyTicker}
             onChange={(e) => setCompanyTicker(e.target.value)}
+            title="Filter results by company"
           >
             <option value="">All Companies</option>
             {companiesList.map(({ name, ticker }) => (
@@ -212,10 +213,11 @@ function App() {
             className="border rounded-lg shadow-sm px-4 py-2 bg-white min-w-[180px] text-sm"
             value={section}
             onChange={(e) => setSection(e.target.value)}
+            title="Limit results to a specific portion of the call"
           >
             <option value="">All Sections</option>
-            <option value="prepared_remarks">Prepared Remarks</option>
-            <option value="qa">Q&amp;A</option>
+            <option value="prepared_remarks" title="Scripted remarks from executives">Prepared Remarks</option>
+            <option value="qa" title="Analyst and management Q&amp;A session">Q&amp;A</option>
           </select>
         </div>
         {/*
@@ -259,7 +261,10 @@ function App() {
 
           {snippets.length > 0 && (
             <details>
-              <summary className="cursor-pointer text-indigo-600 font-medium">
+              <summary
+                className="cursor-pointer text-indigo-600 font-medium"
+                title="Toggle to view transcript snippets"
+              >
                 Show supporting excerpts ({snippets.length})
               </summary>
               <ul className="mt-4 space-y-3 pl-4 text-left">
@@ -293,6 +298,11 @@ function App() {
                               (s.section === 'qa'
                                 ? 'bg-indigo-100 text-indigo-700'
                                 : 'bg-emerald-100 text-emerald-700')
+                            }
+                            title={
+                              s.section === 'qa'
+                                ? 'Analyst and management Q&A'
+                                : 'Scripted remarks from executives'
                             }
                           >
                             {s.section === 'qa' ? 'Q&A' : 'Prepared Remarks'}
