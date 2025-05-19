@@ -1,6 +1,6 @@
 # Ingestion Pipeline
 
-Currently implemented as a CLI utility, this tool had been used to
+Currently implemented as a CLI utility, this tool is used to:
 - Crawl for URLs to pull
 - Fetch HTML from the URLs
 - Parse the HTML
