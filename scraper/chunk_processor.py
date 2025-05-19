@@ -44,6 +44,7 @@ class ChunkProcessor:
 
     def embed(self, batch_token_limit: int = EMBED_BATCH_TOKEN_LIMIT):
         self.report["embed_started_at"] = now_utc_iso()
+        start = time.perf_counter()
 
         def create_batches_by_token(
             chunks: List[TranscriptChunk], max_tokens
@@ -84,9 +85,11 @@ class ChunkProcessor:
                     for chunk in chunk_batch:
                         self.failed_slugs.add(chunk.transcript_key_slug())
                 pbar.update(len(chunk_batch))
+        self.report["embed_seconds"] = time.perf_counter() - start
 
     def upsert(self, batch_size: int = UPSERT_BATCH_SIZE, dry_run: bool = False):
         self.report["upsert_started_at"] = now_utc_iso()
+        start = time.perf_counter()
         with tqdm(desc="📦 Upserting vectors", total=len(self.embeddings)) as pbar:
             for chunk_batch, embed_batch in zip(
                 chunked(self.chunks, batch_size), chunked(self.embeddings, batch_size)
@@ -101,6 +104,7 @@ class ChunkProcessor:
                     for chunk in chunk_batch:
                         self.failed_slugs.add(chunk.transcript_key_slug())
                 pbar.update(len(chunk_batch))
+        self.report["upsert_seconds"] = time.perf_counter() - start
 
     async def refresh_metadata_async(
         self, dry_run: bool = False, batch_size: int = 100
@@ -169,7 +173,9 @@ class ChunkProcessor:
     def get_report(self):
         return {
             "embed_started_at": self.report.get("embed_started_at"),
+            "embed_seconds": self.report.get("embed_seconds"),
             "upsert_started_at": self.report.get("upsert_started_at"),
+            "upsert_seconds": self.report.get("upsert_seconds"),
             "successful_slugs": list(self.successful_slugs),
             "failed_slugs": list(self.failed_slugs),
             "total_chunks": len(self.chunks),
