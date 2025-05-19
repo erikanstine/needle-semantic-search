@@ -1,0 +1,49 @@
+name: Lint
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            python:
+              - 'backend/**'
+              - 'scraper/**'
+              - 'common/**'
+              - 'setup.py'
+            frontend:
+              - 'frontend/**'
+
+      - uses: actions/setup-python@v5
+        if: steps.changes.outputs.python == 'true'
+        with:
+          python-version: '3.11'
+      - name: Install black
+        if: steps.changes.outputs.python == 'true'
+        run: pip install black
+      - name: Run black
+        if: steps.changes.outputs.python == 'true'
+        run: black --check backend scraper common setup.py
+
+      - uses: actions/setup-node@v4
+        if: steps.changes.outputs.frontend == 'true'
+        with:
+          node-version: '20'
+      - name: Install frontend dependencies
+        if: steps.changes.outputs.frontend == 'true'
+        run: npm ci
+        working-directory: frontend
+      - name: Run ESLint
+        if: steps.changes.outputs.frontend == 'true'
+        run: npm run lint
+        working-directory: frontend
