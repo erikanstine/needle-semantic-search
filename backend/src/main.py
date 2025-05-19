@@ -62,6 +62,12 @@ app.add_middleware(
 )
 
 
+@app.get("/healthz", status_code=status.HTTP_200_OK)
+def healthz():
+    """Health check endpoint used for monitoring."""
+    return {"status": "ok"}
+
+
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     logger.info(
