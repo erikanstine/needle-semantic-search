@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { Analytics } from "@vercel/analytics/next"
 import './App.css'
 import axios from 'axios'
 
@@ -313,6 +314,7 @@ function App() {
           Client-side cache cleared
         </div>
       )}
+      <Analytics />
     </div>
   )
 }
