@@ -7,13 +7,15 @@ on:
     branches: [ main ]
 
 jobs:
-  lint:
+  changes:
     runs-on: ubuntu-latest
+    outputs:
+      python: ${{ steps.filter.outputs.python }}
+      frontend: ${{ steps.filter.outputs.frontend }}
     steps:
       - uses: actions/checkout@v4
-
-      - uses: dorny/paths-filter@v3
-        id: changes
+      - id: filter
+        uses: dorny/paths-filter@v3
         with:
           filters: |
             python:
@@ -24,26 +26,32 @@ jobs:
             frontend:
               - 'frontend/**'
 
+  python-lint:
+    needs: changes
+    if: needs.changes.outputs.python == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        if: steps.changes.outputs.python == 'true'
         with:
           python-version: '3.11'
       - name: Install black
-        if: steps.changes.outputs.python == 'true'
         run: pip install black
       - name: Run black
-        if: steps.changes.outputs.python == 'true'
         run: black --check backend scraper common setup.py
 
+  frontend-lint:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        if: steps.changes.outputs.frontend == 'true'
         with:
           node-version: '20'
       - name: Install frontend dependencies
-        if: steps.changes.outputs.frontend == 'true'
         run: npm ci
         working-directory: frontend
       - name: Run ESLint
-        if: steps.changes.outputs.frontend == 'true'
         run: npm run lint
         working-directory: frontend
