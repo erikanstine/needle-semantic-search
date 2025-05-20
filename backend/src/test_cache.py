@@ -34,3 +34,9 @@ def test_lru_ordering():
     assert cache.get("b") is None
     assert cache.get("a") == 1
     assert cache.get("c") == 3
+
+
+def test_lru_zero_capacity():
+    cache = LRUCache(capacity=0)
+    cache.set("a", 1)
+    assert cache.get("a") is None

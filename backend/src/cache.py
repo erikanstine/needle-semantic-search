@@ -29,6 +29,8 @@ class LRUCache:
         self.map[k] = node
 
     def _delete(self, n: Node):
+        if n is self.head or n is self.tail:
+            return
         n.left.right = n.right
         n.right.left = n.left
         del self.map[n.key]
@@ -42,6 +44,8 @@ class LRUCache:
         return
 
     def set(self, k: Any, v: Any):
+        if self.capacity <= 0:
+            return
         if len(self.map) >= self.capacity:
             self._delete(self.tail.left)
         if self.map.get(k):
