@@ -3,6 +3,7 @@ import asyncio
 import concurrent.futures
 import json
 import os
+from contextlib import nullcontext
 
 from tqdm import tqdm
 
@@ -17,8 +18,68 @@ from utils.report import (
     save_run_report,
     save_skipped_slugs,
     save_ingest_report,
+    PipelineProfiler,
+    print_pipeline_report,
+    save_pipeline_report,
 )
 from utils.storage import TranscriptKey
+
+
+def run_ingest(st: StatusTracker, dry_run: bool, force: bool, profiler: PipelineProfiler | None = None):
+    chunks = []
+    if force:
+        print(
+            "⚠️  --force is True: All slugs will be reprocessed, even if already parsed."
+        )
+        slugs_to_parse = list(st.data.keys())[:1]
+    else:
+        print("ℹ️  --force is False: Only unparsed slugs will be processed.")
+        slugs_to_parse = st.filter_for(step="parsed", status=False)
+
+    parse_ctx = profiler.record("parse") if profiler else nullcontext()
+    with parse_ctx:
+        for slug in tqdm(slugs_to_parse, desc="Parsing transcripts"):
+            tk = TranscriptKey.from_slug(slug)
+            html_path = tk.to_path(data_root="data")
+
+            try:
+                with open(html_path, "r", encoding="utf-8") as f:
+                    parser = Parser.from_html(f.read(), tk, st.get_url(tk.slug()))
+                    chunks.extend(parser.parse_html())
+                if not dry_run:
+                    st.mark_success(tk.slug(), "parsed")
+                else:
+                    print(f"🚫 Dry run: Would have marked {slug} as parsed.")
+            except Exception as e:
+                if not dry_run:
+                    st.mark_failure(tk.slug(), "parsed", str(e))
+                else:
+                    print(f"🚫 Dry run: Would have marked {slug} as failed.\n{e}")
+
+    processor = ChunkProcessor(chunks)
+    if not dry_run:
+        if profiler:
+            with profiler.record("embed"):
+                processor.embed()
+            with profiler.record("upsert"):
+                processor.upsert()
+        else:
+            processor.embed()
+            processor.upsert()
+        for slug in processor.get_successful_slugs():
+            st.mark_success(slug, "embedded")
+        for slug in processor.get_failed_slugs():
+            st.mark_failure(slug, "embedded", "Embedding or upsert failed")
+        st.save()
+        save_skipped_slugs(processor.get_failed_slugs(), reason="embedding")
+    else:
+        print(f"🚫 Dry run: Would have embedded and upserted {len(chunks)} chunks.")
+        for slug in processor.get_successful_slugs():
+            print(f"🚫 Dry run: Would have marked {slug} as embedded success.")
+        for slug in processor.get_failed_slugs():
+            print(f"🚫 Dry run: Would have marked {slug} as embedded failure.")
+
+    return processor.get_report()
 
 
 def main():
@@ -30,12 +91,13 @@ def main():
             "crawl",
             "fetch",
             "ingest",
+            "profile",
             "retry",
             "refresh_metadata",
             "extract_candidates",
             "regenerate_snippets",
         ],
-        help="Step to run: 'crawl' (discover URLs), 'fetch' (download HTML), 'ingest' (parse and embed), or 'retry' (retry failed embeddings)",
+        help="Step to run: 'crawl', 'fetch', 'ingest', 'profile' or 'retry'",
     )
     parser.add_argument(
         "--dry_run",
@@ -75,51 +137,22 @@ def main():
             print("No cached URL list found. Run 'crawl' first.")
 
     elif args.step == "ingest":
-        chunks = []
-        if args.force:
-            print(
-                "⚠️  --force is True: All slugs will be reprocessed, even if already parsed."
-            )
-            slugs_to_parse = list(st.data.keys())[:1]
-        else:
-            print("ℹ️  --force is False: Only unparsed slugs will be processed.")
-            slugs_to_parse = st.filter_for(step="parsed", status=False)
-        for slug in tqdm(slugs_to_parse, desc="Parsing transcripts"):
-            tk = TranscriptKey.from_slug(slug)
-            html_path = tk.to_path(data_root="data")
-
-            try:
-                with open(html_path, "r", encoding="utf-8") as f:
-                    parser = Parser.from_html(f.read(), tk, st.get_url(tk.slug()))
-                    chunks.extend(parser.parse_html())
-                if not args.dry_run:
-                    st.mark_success(tk.slug(), "parsed")
-                else:
-                    print(f"🚫 Dry run: Would have marked {slug} as parsed.")
-            except Exception as e:
-                if not args.dry_run:
-                    st.mark_failure(tk.slug(), "parsed", str(e))
-                else:
-                    print(f"🚫 Dry run: Would have marked {slug} as failed.\n{e}")
-
-        processor = ChunkProcessor(chunks)
-        if not args.dry_run:
-            processor.embed()
-            processor.upsert()
-            for slug in processor.get_successful_slugs():
-                st.mark_success(slug, "embedded")
-            for slug in processor.get_failed_slugs():
-                st.mark_failure(slug, "embedded", "Embedding or upsert failed")
-            st.save()
-            save_skipped_slugs(processor.get_failed_slugs(), reason="embedding")
-        else:
-            print(f"🚫 Dry run: Would have embedded and upserted {len(chunks)} chunks.")
-            for slug in processor.get_successful_slugs():
-                print(f"🚫 Dry run: Would have marked {slug} as embedded success.")
-            for slug in processor.get_failed_slugs():
-                print(f"🚫 Dry run: Would have marked {slug} as embedded failure.")
-        report = processor.get_report()
+        report = run_ingest(st, args.dry_run, args.force)
         save_ingest_report(report, args.step)
+
+    elif args.step == "profile":
+        profiler = PipelineProfiler()
+        with profiler.record("crawl"):
+            urls = get_urls_and_store(force=args.force)
+        with profiler.record("fetch"):
+            if urls:
+                fetcher = HTMLFetcher(st, urls, force=args.force)
+                fetcher.fetch()
+        ingest_report = run_ingest(st, args.dry_run, args.force, profiler)
+        pipeline_report = profiler.finish()
+        pipeline_report["ingest"] = ingest_report
+        print_pipeline_report(pipeline_report)
+        save_pipeline_report(pipeline_report)
 
     elif args.step == "retry":
         # Load slugs to retry
